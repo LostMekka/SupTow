@@ -17,6 +17,8 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.ListIterator;
 
 public class SupTowGame extends ApplicationAdapter {
 
@@ -65,10 +67,11 @@ public class SupTowGame extends ApplicationAdapter {
 		fabbers = new EntityList();
 		towers = new EntityList();
 		enemies = new EntityList();
+		shots = new EntityList();
 		createFabber(Vector2.Zero)
 				.getMovementModule()
 				.setTarget(new Vector2(2f, 1f));
-		createEnemy(new Vector2(4f, 2f));
+		createEnemy(new Vector2(-6f, -4f));
 		
 		Gdx.input.setInputProcessor(new SupTowInputProcessor(this));
 		
@@ -90,9 +93,11 @@ public class SupTowGame extends ApplicationAdapter {
 		for (Entity e : fabbers) updateEntity(e, deltaTime);
 		for (Entity e : towers) updateEntity(e, deltaTime);
 		for (Entity e : enemies) updateEntity(e, deltaTime);
+		for (Entity e : shots) updateEntity(e, deltaTime);
 		fabbers.applyRemoval();
 		towers.applyRemoval();
 		enemies.applyRemoval();
+		shots.applyRemoval();
 		doPhysicsStep(deltaTime);
 		
 		// render
@@ -132,7 +137,7 @@ public class SupTowGame extends ApplicationAdapter {
 
 	public Entity createFabber(Vector2 position) {
 		Entity e = Entity.create(physicsWorld, position, 1f, 0, false);
-		e.setMovementModule(new MovementModule(2.5f, 2f, 0.25f));
+		e.setMovementModule(new MovementModule(3.5f, 2f, 0.25f));
 		e.setHealthModule(new HealthModule(100f));
 		e.setFabberModule(new FabberModule());
 		return fabbers.add(e) ? e : null;
@@ -141,33 +146,31 @@ public class SupTowGame extends ApplicationAdapter {
 	public Entity createTower(Vector2 position) {
 		Entity e = Entity.create(physicsWorld, position, 2f, 0, true);
 		e.setHealthModule(new HealthModule(500f));
-		e.setWeaponsModule(new WeaponsModule(1f, 2f, 10f, 20f, 6f));
+		e.setWeaponsModule(new WeaponsModule(1f, 8f, 3f, 20f, 6f));
 		return towers.add(e) ? e : null;
 	}
 	
 	public Entity createEnemy(Vector2 position) {
 		Entity e = Entity.create(physicsWorld, position, 1.5f, 1, false);
-		e.setMovementModule(new MovementModule(2.5f, 1f, 1f));
+		e.setMovementModule(new MovementModule(3.5f, 1f, 1f));
 		e.setHealthModule(new HealthModule(200f));
-		e.setWeaponsModule(new WeaponsModule(1f, 2f, 10f, 20f, 6f));
+		e.setWeaponsModule(new WeaponsModule(1f, 8f, 3f, 20f, 16f));
 		return enemies.add(e) ? e : null;
 	}
 	
-	public Entity createShot(Entity source) {
+	public Entity createShot(Entity source, Vector2 target) {
 		WeaponsModule w = source.getWeaponsModule();
 		if (w == null) return null;
-		Entity target = w.getCurrentTarget();
 		if (target == null) return null;
 		Vector2 start = source.physicsBody.getPosition();
-		Vector2 end = target.physicsBody.getPosition();
 		float vel = w.shotVelocity;
 		float dmg = w.damage;
 		int team = source.team;
 		float timer = w.shotLifeTime;
 		
-		Entity e = Entity.create(physicsWorld, start, 1.5f, 1, false);
-		e.setShotModule(new ShotModule(start, end, vel, dmg, team, timer));
-		return enemies.add(e) ? e : null;
+		Entity e = Entity.create(physicsWorld, start, 0.3f, source.team, false);
+		e.setShotModule(new ShotModule(start, target, vel, dmg, team, timer));
+		return shots.add(e) ? e : null;
 	}
 	
 	public void destroyEntity(Entity e) {
@@ -175,10 +178,16 @@ public class SupTowGame extends ApplicationAdapter {
 		fabbers.markToRemove(e);
 		towers.markToRemove(e);
 		enemies.markToRemove(e);
+		shots.markToRemove(e);
 	}
 	
-	public Collection<Entity> getTargetableEntities(Entity source) {
-		return null;
+	public Collection<Entity> getTargetableEntities() {
+		LinkedList<Entity> answer = new LinkedList<Entity>();
+		fabbers.addAllToCollection(answer);
+		towers.addAllToCollection(answer);
+		enemies.addAllToCollection(answer);
+		// shots are not targetable
+		return answer;
 	}
 
 	public void addDebugRenderTask(Runnable runnable) {

@@ -6,6 +6,7 @@
 
 package de.lostmekkasoft.suptow;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -43,6 +44,10 @@ public class EntityList implements Iterable<Entity> {
 	@Override
 	public Iterator<Entity> iterator() {
 		return list.iterator();
+	}
+	
+	public void addAllToCollection(Collection<Entity> collection) {
+		collection.addAll(list);
 	}
 	
 }

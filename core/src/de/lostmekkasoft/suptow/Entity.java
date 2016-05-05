@@ -16,6 +16,7 @@ public class Entity {
 	
 	public final Body physicsBody;
 	public final int team;
+	public final float radius;
 	
 	private MovementModule 	movementModule 	= null;
 	private HealthModule 	healthModule 	= null;
@@ -48,14 +49,15 @@ public class Entity {
 		fixtureDef.restitution = 0.3f;
 		Fixture fixture = body.createFixture(fixtureDef);
 		circle.dispose();
-		Entity e = new Entity(body, team);
+		Entity e = new Entity(body, team, radius);
 		fixture.setUserData(e);
 		return e;
 	}
 	
-	public Entity(Body physicsBody, int team) {
+	private Entity(Body physicsBody, int team, float radius) {
 		this.physicsBody = physicsBody;
 		this.team = team;
+		this.radius = radius;
 	}
 
 	public MovementModule getMovementModule() {
@@ -81,6 +83,7 @@ public class Entity {
 
 	public void setWeaponsModule(WeaponsModule weaponsModule) {
 		this.weaponsModule = weaponsModule;
+		weaponsModule.init(this);
 	}
 
 	public ShotModule getShotModule() {
@@ -95,12 +98,18 @@ public class Entity {
 	public void update(float deltaTime) {
 		if (movementModule != null) movementModule.update(this, deltaTime);
 		if (weaponsModule != null) weaponsModule.update(deltaTime);
+		if (shotModule != null) shotModule.update(deltaTime);
 	}
 	
 	public boolean needsToBeRemoved() {
 		if (healthModule != null && !healthModule.isAlive()) return true;
 		if (shotModule != null && !shotModule.isAlive()) return true;
 		return false;
+	}
+	
+	public float getDistanceTo(Entity target) {
+		return physicsBody.getPosition().dst(target.physicsBody.getPosition())
+				- target.radius / 2f;
 	}
 	
 }
