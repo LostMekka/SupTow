@@ -9,6 +9,11 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Timer;
+import com.badlogic.gdx.utils.Timer.Task;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class SupTowGame extends ApplicationAdapter {
 
@@ -19,8 +24,14 @@ public class SupTowGame extends ApplicationAdapter {
 	World physicsWorld;
 	Box2DDebugRenderer debugRenderer;
 	OrthographicCamera camera;
+	Viewport viewport;
 	EntityList fabbers, towers, enemies;
 	
+	@Override
+	public void resize(int width, int height) {
+		viewport.update(width, height);
+	}
+
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
@@ -30,13 +41,27 @@ public class SupTowGame extends ApplicationAdapter {
 		debugRenderer.setDrawContacts(true);
 		debugRenderer.setDrawInactiveBodies(true);
 		debugRenderer.setDrawVelocities(true);
-		camera = new OrthographicCamera(25, 20);
+		
+		camera = new OrthographicCamera();
+		viewport = new FitViewport(25, 20, camera);
+		
 		fabbers = new EntityList();
 		towers = new EntityList();
 		enemies = new EntityList();
 		createFabber(Vector2.Zero)
 				.getMovementModule()
 				.setTarget(new Vector2(0.5f, 0.5f));
+		
+		Gdx.input.setInputProcessor(new SupTowInputProcessor(this));
+		
+		Timer.schedule(new DebugPrint(), 1, 1);
+	}
+	
+	class DebugPrint extends Task {
+		@Override
+		public void run() {
+			//System.out.println("camera: " + camera.combined);
+		}
 	}
 
 	@Override
@@ -58,6 +83,8 @@ public class SupTowGame extends ApplicationAdapter {
 		batch.begin();
 		// TODO: render entities here
 		batch.end();
+		
+		camera.update();
 		debugRenderer.render(physicsWorld, camera.combined);
 	}
 	
