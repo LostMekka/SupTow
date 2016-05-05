@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -14,6 +15,7 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.ArrayList;
@@ -32,15 +34,17 @@ public class SupTowGame extends ApplicationAdapter {
 		return instance;
 	}
 
-	SpriteBatch batch;
+	BitmapFont font;
+	SpriteBatch batch, hudBatch;
 	Texture img;
 	World physicsWorld;
 	Box2DDebugRenderer debugRenderer;
 	ShapeRenderer shapeRenderer;
-	OrthographicCamera camera;
-	Viewport viewport;
+	OrthographicCamera camera, hudCamera;
+	Viewport viewport, hudViewport;
 	EntityList fabbers, towers, enemies, shots, resourcePoints;
 	ArrayList<Runnable> debugRenderTasks = new ArrayList<Runnable>(8);
+	float resources = 0;
 
 	public SupTowGame() {
 		instance = this;
@@ -49,6 +53,7 @@ public class SupTowGame extends ApplicationAdapter {
 	@Override
 	public void resize(int width, int height) {
 		viewport.update(width, height);
+		hudViewport.update(width, height);
 	}
 	
 	static class Textures {
@@ -70,7 +75,8 @@ public class SupTowGame extends ApplicationAdapter {
 
 	@Override
 	public void create () {
-		batch 	= new SpriteBatch();
+		batch    = new SpriteBatch();
+		hudBatch = new SpriteBatch();
 		
 		Textures.sprites = new Texture("sprites.png");
 		TextureRegion[][] regions = TextureRegion.split(Textures.sprites, 32, 32);
@@ -78,7 +84,7 @@ public class SupTowGame extends ApplicationAdapter {
 		Textures.tower	       = new Textures.Element(regions[0][1], 28);
 		Textures.shot          = new Textures.Element(regions[1][0], 10);
 		Textures.enemy	       = new Textures.Element(regions[1][1], 20);
-		Textures.resourcePoint = new Textures.Element(regions[0][2], 28);
+		Textures.resourcePoint = new Textures.Element(regions[0][2], 20);
 		
 		physicsWorld = new World(Vector2.Zero, true);
 		physicsWorld.setContactListener(new ContactListener());
@@ -88,17 +94,22 @@ public class SupTowGame extends ApplicationAdapter {
 		debugRenderer.setDrawInactiveBodies(true);
 		
 		camera = new OrthographicCamera();
-		viewport = new FitViewport(50, 25, camera);
+		viewport = new FitViewport(40, 30, camera);
+		hudCamera = new OrthographicCamera();
+		hudViewport = new ScreenViewport(camera);
 
 		shapeRenderer = new ShapeRenderer();
 		shapeRenderer.setAutoShapeType(true);
+		
+		font = new BitmapFont();
+		font.getData().setScale(2);
 		
 		fabbers = new EntityList();
 		towers = new EntityList();
 		enemies = new EntityList();
 		shots = new EntityList();
 		resourcePoints = new EntityList();
-		createFabber(Vector2.Zero)
+		createFabber(new Vector2(3f, 3f))
 				.getMovementModule()
 				.setTarget(new Vector2(2f, 1f));
 		createEnemy(new Vector2(-6f, -4f));
@@ -121,6 +132,7 @@ public class SupTowGame extends ApplicationAdapter {
 		float deltaTime = Gdx.graphics.getDeltaTime();
 		
 		// update
+		viewport.apply();
 		for (Entity e : fabbers) updateEntity(e, deltaTime);
 		for (Entity e : towers) updateEntity(e, deltaTime);
 		for (Entity e : enemies) updateEntity(e, deltaTime);
@@ -138,6 +150,7 @@ public class SupTowGame extends ApplicationAdapter {
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		// sprites
+		viewport.apply();
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
 		for (Entity e : fabbers)        renderEntity(e, Textures.fabber);
@@ -152,6 +165,15 @@ public class SupTowGame extends ApplicationAdapter {
 		for (Runnable task : debugRenderTasks) task.run();
 		debugRenderTasks.clear();
 		shapeRenderer.end();
+		// overlay
+		hudViewport.apply();
+		hudBatch.setProjectionMatrix(hudCamera.projection);
+		hudBatch.begin();
+		font.draw(hudBatch, "resources: " + resources, 1, 1);
+		hudBatch.end();
+		
+		// set gameplay viewport for input, which is handled between render calls
+		viewport.apply();
 	}
 	
 	private float _physicsStepTimer = 0f;
