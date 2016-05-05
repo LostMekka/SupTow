@@ -98,10 +98,17 @@ public class SupTowGame extends ApplicationAdapter {
 		enemies = new EntityList();
 		shots = new EntityList();
 		resourcePoints = new EntityList();
+		
 		createFabber(Vector2.Zero)
 				.getMovementModule()
 				.setTarget(new Vector2(2f, 1f));
-		createEnemy(new Vector2(-6f, -4f));
+		
+		for (float i = 0; i < 20; i++) {
+			float x = -60.0f + 34.0f * (float)Math.random();
+			float y = 40.0f - i * 4.0f;
+			createEnemy(new Vector2(x, y));
+		}
+		
 		createTower(new Vector2(4f, -1f));
 		
 		Gdx.input.setInputProcessor(new InputProcessor(this));
