@@ -37,5 +37,6 @@ public class ResourcePointModule {
 	
 	public float getResourcePercentage() {
 		return resource / maxResource;
-	}	
+	}
+	
 }

@@ -59,7 +59,6 @@ public class SupTowGame extends ApplicationAdapter {
 		debugRenderer = new Box2DDebugRenderer();
 		debugRenderer.setDrawContacts(true);
 		debugRenderer.setDrawInactiveBodies(true);
-		debugRenderer.setDrawVelocities(true);
 		
 		camera = new OrthographicCamera();
 		viewport = new FitViewport(25, 20, camera);
@@ -142,7 +141,8 @@ public class SupTowGame extends ApplicationAdapter {
 	} 
 
 	public Entity createFabber(Vector2 position) {
-		Entity e = Entity.create(physicsWorld, position, 1f, 0, false);
+		Entity e = Entity.create(physicsWorld, position, 1f, 0);
+		e.createFixture();
 		e.setMovementModule(new MovementModule(3.5f, 2f, 0.25f));
 		e.setHealthModule(new HealthModule(100f));
 		e.setFabberModule(new FabberModule());
@@ -150,14 +150,16 @@ public class SupTowGame extends ApplicationAdapter {
 	}
 	
 	public Entity createTower(Vector2 position) {
-		Entity e = Entity.create(physicsWorld, position, 2f, 0, true);
+		Entity e = Entity.create(physicsWorld, position, 2f, 0);
+		e.createFixture();
 		e.setHealthModule(new HealthModule(500f));
 		e.setWeaponsModule(new WeaponsModule(0.1f, 8f, 3f, 20f, 16f));
 		return towers.add(e) ? e : null;
 	}
 	
 	public Entity createEnemy(Vector2 position) {
-		Entity e = Entity.create(physicsWorld, position, 1.5f, 1, false);
+		Entity e = Entity.create(physicsWorld, position, 1.5f, 1);
+		e.createFixture();
 		e.setMovementModule(new MovementModule(3.5f, 1f, 1f));
 		e.setHealthModule(new HealthModule(200f));
 		e.setWeaponsModule(new WeaponsModule(0.2f, 8f, 3f, 20f, 16f));
@@ -173,7 +175,8 @@ public class SupTowGame extends ApplicationAdapter {
 		int team = source.team;
 		float timer = wm.shotLifeTime;
 		
-		Entity e = Entity.create(physicsWorld, start, 0.3f, source.team, false);
+		Entity e = Entity.create(physicsWorld, start, 0.3f, source.team);
+		e.createFixture();
 		e.setShotModule(new ShotModule(start, target, vel, dmg, team, timer));
 		return shots.add(e) ? e : null;
 	}
@@ -187,7 +190,7 @@ public class SupTowGame extends ApplicationAdapter {
 		float max = hm.maxHealth;
 		float res = max * (integrity * 0.4f + 0.2f);
 		
-		Entity e = Entity.create(physicsWorld, pos, rad, -1, true);
+		Entity e = Entity.create(physicsWorld, pos, rad, -1);
 		e.setResourcePointModule(new ResourcePointModule(res, max));
 		return resourcePoints.add(e) ? e : null;
 	}

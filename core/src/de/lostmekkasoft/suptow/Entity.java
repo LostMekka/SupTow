@@ -7,6 +7,7 @@ import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.utils.Array;
 
 /**
  *
@@ -25,33 +26,12 @@ public class Entity {
 	private FabberModule		fabberModule		= null;
 	private ResourcePointModule resourcePointModule = null;
 
-	public FabberModule getFabberModule() {
-		return fabberModule;
-	}
-
-	public void setFabberModule(FabberModule fabberModule) {
-		this.fabberModule = fabberModule;
-	}
-
-	public static Entity create(World world, Vector2 position, float radius, 
-			int team, boolean isStatic){
+	public static Entity create(World world, Vector2 position, float radius, int team){
 		BodyDef bodyDef = new BodyDef();
-		bodyDef.type = isStatic 
-				? BodyDef.BodyType.StaticBody 
-				: BodyDef.BodyType.DynamicBody;
+		bodyDef.type = BodyDef.BodyType.StaticBody;
 		bodyDef.position.set(position.x, position.y);
 		Body body = world.createBody(bodyDef);
-		CircleShape circle = new CircleShape();
-		circle.setRadius(radius);
-		FixtureDef fixtureDef = new FixtureDef();
-		fixtureDef.shape = circle;
-		fixtureDef.density = 0.5f; 
-		fixtureDef.friction = 0.4f;
-		fixtureDef.restitution = 0.3f;
-		Fixture fixture = body.createFixture(fixtureDef);
-		circle.dispose();
 		Entity e = new Entity(body, team, radius);
-		fixture.setUserData(e);
 		return e;
 	}
 	
@@ -60,7 +40,23 @@ public class Entity {
 		this.team = team;
 		this.radius = radius;
 	}
-
+	
+	public Fixture createFixture() {
+		Array<Fixture> fixtures = physicsBody.getFixtureList();
+		if (fixtures.size > 0) return fixtures.first();
+		CircleShape circle = new CircleShape();
+		circle.setRadius(radius);
+		FixtureDef fixtureDef = new FixtureDef();
+		fixtureDef.shape = circle;
+		fixtureDef.density = 0.5f; 
+		fixtureDef.friction = 0.4f;
+		fixtureDef.restitution = 0.3f;
+		Fixture fixture = physicsBody.createFixture(fixtureDef);
+		fixture.setUserData(this);
+		circle.dispose();
+		return fixture;
+	}
+	
 	public MovementModule getMovementModule() {
 		return movementModule;
 	}
@@ -94,6 +90,14 @@ public class Entity {
 	public void setShotModule(ShotModule shotModule) {
 		this.shotModule = shotModule;
 		shotModule.init(this);
+	}
+
+	public FabberModule getFabberModule() {
+		return fabberModule;
+	}
+
+	public void setFabberModule(FabberModule fabberModule) {
+		this.fabberModule = fabberModule;
 	}
 
 	public ResourcePointModule getResourcePointModule() {
