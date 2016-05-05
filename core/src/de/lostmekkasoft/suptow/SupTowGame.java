@@ -63,8 +63,8 @@ public class SupTowGame extends ApplicationAdapter {
 		Textures.sprites = new Texture("sprites.png");
 		TextureRegion[][] regions = TextureRegion.split(Textures.sprites, 32, 32);
 		Textures.fabber = regions[0][0];
-		Textures.tower	= regions[1][0];
-		Textures.shot   = regions[0][1];
+		Textures.tower	= regions[0][1];
+		Textures.shot   = regions[1][0];
 		Textures.enemy  = regions[1][1];
 		
 		physicsWorld = new World(Vector2.Zero, true);
@@ -142,9 +142,16 @@ public class SupTowGame extends ApplicationAdapter {
 		batch.begin();
 		
 		for (Entity e : fabbers) {
-			Vector2 pos = e.physicsBody.getPosition();
-			float r = e.radius;
-			batch.draw(Textures.fabber, pos.x-r*2, pos.y-r*2, r*4, r*4);
+			renderEntity(e, Textures.fabber);
+		}
+		for (Entity e : towers) {
+			renderEntity(e, Textures.tower);
+		}
+		for (Entity e : enemies) {
+			renderEntity(e, Textures.enemy);
+		}
+		for (Entity e : shots) {
+			renderEntity(e, Textures.shot);
 		}
 		
 		batch.end();
@@ -168,6 +175,12 @@ public class SupTowGame extends ApplicationAdapter {
 		e.update(deltaTime);
 		if (e.needsToBeRemoved()) destroyEntity(e);
 	} 
+	
+	private void renderEntity(Entity e, TextureRegion tex) {
+		Vector2 pos = e.physicsBody.getPosition();
+		float r = e.radius;
+		batch.draw(tex, pos.x-r, pos.y-r, r*2, r*2);
+	}
 
 	public Entity createFabber(Vector2 position) {
 		Entity e = Entity.create(physicsWorld, position, 1f, 0, false);
