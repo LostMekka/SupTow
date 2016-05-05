@@ -52,11 +52,20 @@ public class SupTowGame extends ApplicationAdapter {
 	}
 	
 	static class Textures {
-		static Texture 		 sprites;
-		static TextureRegion fabber;
-		static TextureRegion tower;
-		static TextureRegion shot;
-		static TextureRegion enemy;
+		static class Element {
+			final TextureRegion textureRegion;
+			final float scaleFactor;
+			public Element(TextureRegion textureRegion, int size) {
+				this.textureRegion = textureRegion;
+				scaleFactor = size / 32f;
+			}
+		}
+		static Texture sprites;
+		static Element fabber;
+		static Element tower;
+		static Element shot;
+		static Element enemy;
+		static Element resourcePoint;
 	}
 
 	@Override
@@ -65,10 +74,11 @@ public class SupTowGame extends ApplicationAdapter {
 		
 		Textures.sprites = new Texture("sprites.png");
 		TextureRegion[][] regions = TextureRegion.split(Textures.sprites, 32, 32);
-		Textures.fabber = regions[0][0];
-		Textures.tower	= regions[0][1];
-		Textures.shot   = regions[1][0];
-		Textures.enemy  = regions[1][1];
+		Textures.fabber        = new Textures.Element(regions[0][0], 18);
+		Textures.tower	       = new Textures.Element(regions[0][1], 28);
+		Textures.shot          = new Textures.Element(regions[1][0], 10);
+		Textures.enemy	       = new Textures.Element(regions[1][1], 20);
+		Textures.resourcePoint = new Textures.Element(regions[0][2], 28);
 		
 		physicsWorld = new World(Vector2.Zero, true);
 		physicsWorld.setContactListener(new ContactListener());
@@ -122,48 +132,26 @@ public class SupTowGame extends ApplicationAdapter {
 		shots.applyRemoval();
 		resourcePoints.applyRemoval();
 		doPhysicsStep(deltaTime);
+		camera.update();
 		
 		// render
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		batch.begin();
-		// TODO: render entities here
-		batch.end();
-		
-		camera.update();
-		shapeRenderer.setProjectionMatrix(camera.combined);
-		shapeRenderer.begin();
-		
-		for (Runnable task : debugRenderTasks) {
-			task.run();
-		}
-		debugRenderTasks.clear();
-		
-		shapeRenderer.end();
-		
-		
-		
+		// sprites
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
-		
-		for (Entity e : fabbers) {
-			renderEntity(e, Textures.fabber);
-		}
-		for (Entity e : towers) {
-			renderEntity(e, Textures.tower);
-		}
-		for (Entity e : enemies) {
-			renderEntity(e, Textures.enemy);
-		}
-		for (Entity e : shots) {
-			renderEntity(e, Textures.shot);
-		}
-		
+		for (Entity e : fabbers)        renderEntity(e, Textures.fabber);
+		for (Entity e : towers)         renderEntity(e, Textures.tower);
+		for (Entity e : enemies)        renderEntity(e, Textures.enemy);
+		for (Entity e : shots)          renderEntity(e, Textures.shot);
+		for (Entity e : resourcePoints) renderEntity(e, Textures.resourcePoint);
 		batch.end();
-		
-		
-		
-		debugRenderer.render(physicsWorld, camera.combined);
+		// shapes
+		shapeRenderer.setProjectionMatrix(camera.combined);
+		shapeRenderer.begin();
+		for (Runnable task : debugRenderTasks) task.run();
+		debugRenderTasks.clear();
+		shapeRenderer.end();
 	}
 	
 	private float _physicsStepTimer = 0f;
@@ -181,10 +169,10 @@ public class SupTowGame extends ApplicationAdapter {
 		if (e.needsToBeRemoved()) destroyEntity(e);
 	} 
 	
-	private void renderEntity(Entity e, TextureRegion tex) {
+	private void renderEntity(Entity e, Textures.Element element) {
 		Vector2 pos = e.physicsBody.getPosition();
-		float r = e.radius;
-		batch.draw(tex, pos.x-r, pos.y-r, r*2, r*2);
+		float r = e.radius / element.scaleFactor;
+		batch.draw(element.textureRegion, pos.x-r, pos.y-r, r*2, r*2);
 	}
 
 	public Entity createFabber(Vector2 position) {
