@@ -1,5 +1,10 @@
 package de.lostmekkasoft.suptow;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Random;
+
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
@@ -14,9 +19,7 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,7 +44,7 @@ public class SupTowGame extends ApplicationAdapter {
 	Box2DDebugRenderer debugRenderer;
 	ShapeRenderer shapeRenderer;
 	OrthographicCamera camera, hudCamera;
-	Viewport viewport, hudViewport;
+	ScreenViewport viewport, hudViewport;
 	EntityList fabbers, towers, enemies, shots, resourcePoints;
 	ArrayList<Runnable> debugRenderTasks = new ArrayList<Runnable>(8);
 	float resources = 0;
@@ -94,7 +97,8 @@ public class SupTowGame extends ApplicationAdapter {
 		debugRenderer.setDrawInactiveBodies(true);
 		
 		camera = new OrthographicCamera();
-		viewport = new FitViewport(40, 30, camera);
+		viewport = new ScreenViewport(camera);
+		viewport.setUnitsPerPixel(1.0f / 8.0f);
 		hudCamera = new OrthographicCamera();
 		hudViewport = new ScreenViewport(camera);
 
@@ -109,10 +113,16 @@ public class SupTowGame extends ApplicationAdapter {
 		enemies = new EntityList();
 		shots = new EntityList();
 		resourcePoints = new EntityList();
+		
 		createFabber(new Vector2(3f, 3f))
 				.getMovementModule()
 				.setTarget(new Vector2(2f, 1f));
-		createEnemy(new Vector2(-6f, -4f));
+		for (float i = 0; i < 20; i++) {
+			float x = -60.0f + 34.0f * (float)Math.random();
+			float y = 40.0f - i * 4.0f;
+			createEnemy(new Vector2(x, y));
+		}
+		
 		createTower(new Vector2(4f, -1f));
 		
 		Gdx.input.setInputProcessor(new InputProcessor(this));
