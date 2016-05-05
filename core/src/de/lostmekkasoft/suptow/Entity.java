@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.World;
 
@@ -19,10 +20,14 @@ public class Entity {
 	private MovementModule movementModule = null;
 	private HealthModule healthModule = null;
 	private WeaponsModule weaponsModule = null;
+	private ShotModule shotModule = null;
 
-	public static Entity create(World world, Vector2 position, float radius, int team){
+	public static Entity create(World world, Vector2 position, float radius, 
+			int team, boolean isStatic){
 		BodyDef bodyDef = new BodyDef();
-		bodyDef.type = BodyDef.BodyType.DynamicBody;
+		bodyDef.type = isStatic 
+				? BodyDef.BodyType.StaticBody 
+				: BodyDef.BodyType.DynamicBody;
 		bodyDef.position.set(position.x, position.y);
 		Body body = world.createBody(bodyDef);
 		CircleShape circle = new CircleShape();
@@ -32,9 +37,11 @@ public class Entity {
 		fixtureDef.density = 0.5f; 
 		fixtureDef.friction = 0.4f;
 		fixtureDef.restitution = 0.3f;
-		body.createFixture(fixtureDef);
+		Fixture fixture = body.createFixture(fixtureDef);
 		circle.dispose();
-		return new Entity(body, team);
+		Entity e = new Entity(body, team);
+		fixture.setUserData(e);
+		return e;
 	}
 	
 	public Entity(Body physicsBody, int team) {
@@ -66,6 +73,15 @@ public class Entity {
 	public void setWeaponsModule(WeaponsModule weaponsModule) {
 		this.weaponsModule = weaponsModule;
 	}
+
+	public ShotModule getShotModule() {
+		return shotModule;
+	}
+
+	public void setShotModule(ShotModule shotModule) {
+		this.shotModule = shotModule;
+		shotModule.init(this);
+	}
 	
 	public void update(float deltaTime) {
 		if (movementModule != null) movementModule.update(this, deltaTime);
@@ -74,6 +90,7 @@ public class Entity {
 	
 	public boolean needsToBeRemoved() {
 		if (healthModule != null && !healthModule.isAlive()) return true;
+		if (shotModule != null && !shotModule.isAlive()) return true;
 		return false;
 	}
 	

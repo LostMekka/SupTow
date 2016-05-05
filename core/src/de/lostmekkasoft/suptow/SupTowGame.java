@@ -48,6 +48,7 @@ public class SupTowGame extends ApplicationAdapter {
 		batch = new SpriteBatch();
 		img = new Texture("badlogic.jpg");
 		physicsWorld = new World(Vector2.Zero, true);
+		physicsWorld.setContactListener(new ContactListener());
 		debugRenderer = new Box2DDebugRenderer();
 		debugRenderer.setDrawContacts(true);
 		debugRenderer.setDrawInactiveBodies(true);
@@ -122,24 +123,24 @@ public class SupTowGame extends ApplicationAdapter {
 	} 
 
 	public Entity createFabber(Vector2 position) {
-		Entity e = Entity.create(physicsWorld, position, 1f, 0);
+		Entity e = Entity.create(physicsWorld, position, 1f, 0, false);
 		e.setMovementModule(new MovementModule(2.5f, 2f, 0.25f));
 		e.setHealthModule(new HealthModule(100f));
 		return fabbers.add(e) ? e : null;
 	}
 	
 	public Entity createTower(Vector2 position) {
-		Entity e = Entity.create(physicsWorld, position, 2f, 0);
+		Entity e = Entity.create(physicsWorld, position, 2f, 0, true);
 		e.setHealthModule(new HealthModule(500f));
-		e.setWeaponsModule(new WeaponsModule(1f, 2f, 20f, 6f));
+		e.setWeaponsModule(new WeaponsModule(1f, 2f, 10f, 20f, 6f));
 		return towers.add(e) ? e : null;
 	}
 	
 	public Entity createEnemy(Vector2 position) {
-		Entity e = Entity.create(physicsWorld, position, 1.5f, 1);
+		Entity e = Entity.create(physicsWorld, position, 1.5f, 1, false);
 		e.setMovementModule(new MovementModule(2.5f, 1f, 1f));
 		e.setHealthModule(new HealthModule(200f));
-		e.setWeaponsModule(new WeaponsModule(1f, 2f, 20f, 6f));
+		e.setWeaponsModule(new WeaponsModule(1f, 2f, 10f, 20f, 6f));
 		return enemies.add(e) ? e : null;
 	}
 	
@@ -148,12 +149,15 @@ public class SupTowGame extends ApplicationAdapter {
 		if (w == null) return null;
 		Entity target = w.getCurrentTarget();
 		if (target == null) return null;
-		Vector2 targetPos = target.physicsBody.getPosition();
+		Vector2 start = source.physicsBody.getPosition();
+		Vector2 end = target.physicsBody.getPosition();
+		float vel = w.shotVelocity;
+		float dmg = w.damage;
+		int team = source.team;
+		float timer = w.shotLifeTime;
 		
-		Entity e = Entity.create(physicsWorld, source.physicsBody.getPosition(), 1.5f, 1);
-		MovementModule movement = new MovementModule(2.5f, 1f, 1f);
-		movement.setTarget(targetPos, -1f); // hack for never stopping
-		e.setMovementModule(movement);
+		Entity e = Entity.create(physicsWorld, start, 1.5f, 1, false);
+		e.setShotModule(new ShotModule(start, end, vel, dmg, team, timer));
 		return enemies.add(e) ? e : null;
 	}
 	

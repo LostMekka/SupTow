@@ -14,15 +14,18 @@ public class WeaponsModule {
 	
 	public final float reloadTime;
 	public final float shotVelocity;
+	public final float shotLifeTime;
 	public final float damage;
 	public final float range;
 	
 	private Entity currentTarget = null;
 	private float timer = 0;
 
-	public WeaponsModule(float reloadTime, float shotVelocity, float damage, float range) {
+	public WeaponsModule(float reloadTime, float shotVelocity, 
+			float shotLifeTime, float damage, float range) {
 		this.reloadTime = reloadTime;
 		this.shotVelocity = shotVelocity;
+		this.shotLifeTime = shotLifeTime;
 		this.damage = damage;
 		this.range = range;
 	}
