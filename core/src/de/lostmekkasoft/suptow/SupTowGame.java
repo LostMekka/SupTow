@@ -6,13 +6,13 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class SupTowGame extends ApplicationAdapter {
@@ -23,6 +23,7 @@ public class SupTowGame extends ApplicationAdapter {
 	Texture img;
 	World physicsWorld;
 	Box2DDebugRenderer debugRenderer;
+	ShapeRenderer shapeRenderer;
 	OrthographicCamera camera;
 	Viewport viewport;
 	EntityList fabbers, towers, enemies;
@@ -44,13 +45,15 @@ public class SupTowGame extends ApplicationAdapter {
 		
 		camera = new OrthographicCamera();
 		viewport = new FitViewport(25, 20, camera);
-		
+
+		shapeRenderer = new ShapeRenderer();
+		shapeRenderer.setAutoShapeType(true);
 		fabbers = new EntityList();
 		towers = new EntityList();
 		enemies = new EntityList();
 		createFabber(Vector2.Zero)
 				.getMovementModule()
-				.setTarget(new Vector2(0.5f, 0.5f));
+				.setTarget(new Vector2(2f, 1f));
 		
 		Gdx.input.setInputProcessor(new SupTowInputProcessor(this));
 		
@@ -85,6 +88,10 @@ public class SupTowGame extends ApplicationAdapter {
 		batch.end();
 		
 		camera.update();
+		shapeRenderer.setProjectionMatrix(camera.combined);
+		shapeRenderer.begin();
+		// TODO: render additional shapes here
+		shapeRenderer.end();
 		debugRenderer.render(physicsWorld, camera.combined);
 	}
 	
@@ -100,7 +107,7 @@ public class SupTowGame extends ApplicationAdapter {
 
 	public Entity createFabber(Vector2 position) {
 		Entity e = Entity.create(physicsWorld, position, 1f);
-		e.setMovementModule(new MovementModule(1f));
+		e.setMovementModule(new MovementModule(2.5f, 2f, 0.25f));
 		return fabbers.add(e) ? e : null;
 	}
 	

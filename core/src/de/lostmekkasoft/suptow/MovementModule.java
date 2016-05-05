@@ -16,39 +16,47 @@ import com.badlogic.gdx.physics.box2d.Body;
 public class MovementModule {
 	
 	private final float sqaredMovementForce;
+	private final float linearDamping;
+	private final float sqaredDefaultMinDistance;
 	
 	private Vector2 target = null;
-	private float minSquaredDistance;
+	private float squaredMinDistance;
 
-	public MovementModule(float movementForce) {
+	public MovementModule(float movementForce, float linearDamping, float defaultMinDistance) {
 		sqaredMovementForce = movementForce * movementForce;
+		sqaredDefaultMinDistance = defaultMinDistance * defaultMinDistance;
+		this.linearDamping = linearDamping;
 	}
 
 	public void setTarget(Vector2 target) {
 		this.target = target;
+		squaredMinDistance = sqaredDefaultMinDistance;
 	}
 
 	public void setTarget(Vector2 target, float minDistance) {
 		this.target = target;
-		minSquaredDistance = minDistance * minDistance;
+		squaredMinDistance = minDistance * minDistance;
 	}
 	
 	public void unsetTarget() {
 		target = null;
-		minSquaredDistance = 0f;
+		squaredMinDistance = 0f;
+	}
+	
+	public void init(Entity e) {
+		e.getPhysicsBody().setLinearDamping(linearDamping);
 	}
 
 	public void update(Entity e, float deltaTime) {
 		if (target == null) return;
 		Body b = e.getPhysicsBody();
-		Vector2 diff = target.sub(b.getPosition());
-		if (diff.len2() <= minSquaredDistance) {
+		Vector2 diff = new Vector2(target).sub(b.getPosition());
+		if (diff.len2() <= squaredMinDistance) {
 			unsetTarget();
-			System.out.println("reached " + b.getPosition().toString() + " " + target.toString());
 			return;
 		}
-		Vector2 force = diff.setLength2(sqaredMovementForce);
-		e.getPhysicsBody().applyForceToCenter(force, true);
+		diff.setLength2(sqaredMovementForce);
+		e.getPhysicsBody().applyForceToCenter(diff, true);
 	}
 	
 }
