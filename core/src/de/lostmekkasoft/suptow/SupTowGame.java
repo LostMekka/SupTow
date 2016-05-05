@@ -69,6 +69,7 @@ public class SupTowGame extends ApplicationAdapter {
 				.getMovementModule()
 				.setTarget(new Vector2(2f, 1f));
 		createEnemy(new Vector2(-6f, -4f));
+		createTower(new Vector2(4f, -1f));
 		
 		Gdx.input.setInputProcessor(new SupTowInputProcessor(this));
 		
@@ -137,7 +138,7 @@ public class SupTowGame extends ApplicationAdapter {
 	public Entity createTower(Vector2 position) {
 		Entity e = Entity.create(physicsWorld, position, 2f, 0, true);
 		e.setHealthModule(new HealthModule(500f));
-		e.setWeaponsModule(new WeaponsModule(1f, 8f, 3f, 20f, 6f));
+		e.setWeaponsModule(new WeaponsModule(1f, 8f, 3f, 20f, 16f));
 		return towers.add(e) ? e : null;
 	}
 	

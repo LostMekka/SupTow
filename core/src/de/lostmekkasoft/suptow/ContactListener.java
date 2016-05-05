@@ -18,14 +18,6 @@ public class ContactListener implements com.badlogic.gdx.physics.box2d.ContactLi
 
 	@Override
 	public void beginContact(Contact cntct) {
-	}
-
-	@Override
-	public void endContact(Contact cntct) {
-	}
-
-	@Override
-	public void preSolve(Contact cntct, Manifold mnfld) {
 		Entity e1 = (Entity)cntct.getFixtureA().getUserData();
 		Entity e2 = (Entity)cntct.getFixtureB().getUserData();
 		boolean e1IsShot = e1.getShotModule() != null;
@@ -36,6 +28,14 @@ public class ContactListener implements com.badlogic.gdx.physics.box2d.ContactLi
 			shot.getShotModule().onHit(target);
 			cntct.setEnabled(false);
 		}
+	}
+
+	@Override
+	public void endContact(Contact cntct) {
+	}
+
+	@Override
+	public void preSolve(Contact cntct, Manifold mnfld) {
 	}
 
 	@Override
