@@ -55,7 +55,9 @@ public class WeaponsModule {
 					nearest = e;
 				}
 			}
-			if (nearest != null && distance <= range) shootAt(nearest);
+			if (nearest != null && distance <= range) {
+				shootAt(nearest);
+			}
 		}
 	}
 	
