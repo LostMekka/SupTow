@@ -1,9 +1,13 @@
 package de.lostmekkasoft.suptow;
 
-import com.badlogic.gdx.Gdx;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.math.Vector2;
@@ -17,6 +21,12 @@ public class InputProcessor extends InputAdapter {
 	boolean isPan;
 	Vector3 touchStart;
 	Vector3 touchLast;
+	
+	enum CommandMode {
+		BuildTower,
+		None
+	}
+	CommandMode commandMode = CommandMode.None;
 	
 	Set<Entity> selection = new HashSet<Entity>(8);
 	
@@ -33,44 +43,89 @@ public class InputProcessor extends InputAdapter {
 			touchLast 			= touchScreen;
 		}
 		if (button == Input.Buttons.LEFT) {
-			isPan					= false;
-			Vector2 click			= new Vector2(screenX, screenY);
-			game.viewport.unproject(click);
-			float size 		= 0.6f;
-			final Vector2 a = click.cpy().add(-size, -size);
-			final Vector2 b = click.cpy().add( size,  size);
-			final Vector2 c = click.cpy().add( size, -size);
-			final Vector2 d = click.cpy().add(-size,  size);
-			
-			game.addDebugRenderTask(new Runnable() {
-				@Override
-				public void run() {
-					game.shapeRenderer.line(a, b);
-					game.shapeRenderer.line(c, d);
-				}
-			});
-			
-			SelectFabber selectFabber = new SelectFabber();
-			game.physicsWorld.rayCast(selectFabber, a, b);
-			game.physicsWorld.rayCast(selectFabber, c, d);
-
-			int selected = selectFabber.fabbers.size();
-			if (selected > 0) {
-				selection.clear();
-				selection.addAll(selectFabber.fabbers);
-				System.out.println("selected "+selection.size());
-			}
-			if (selected == 0 && selection.size() > 0) {
-				game.orderBuildTower(selection, click);
-				selection.clear();
-			}
+			isPan				= false;
+			selectAndCommand(screenX, screenY);
 		}
-		return false;
+		return true;
 	}
 	
-	class SelectFabber implements RayCastCallback {
+	
+	
+	void selectAndCommand(int screenX, int screenY) {
+		Vector2 click		= new Vector2(screenX, screenY);
+		game.viewport.unproject(click);
 		
-		Set<Entity> fabbers = new HashSet<Entity>(8);
+		Set<Entity> entities = entitiesBelow(click);
+		List<Entity> clickedFabbers = new LinkedList<Entity>(entities);
+		filterForFabbers(clickedFabbers);
+
+		if (clickedFabbers.size() > 0 && selection.size() >= 0) {
+			if (isShiftPressed()) {
+				selection.addAll(clickedFabbers);
+			} else {
+				selection.clear();
+				selection.addAll(clickedFabbers);
+			}
+			System.out.println("selected "+selection.size());
+		}
+		else if (clickedFabbers.size() == 0 && selection.size() > 0) {
+			switch (commandMode) {
+			case BuildTower:
+				game.orderBuildTower(selection, click);
+				break;
+			case None:
+				selection.clear();
+				System.out.println("selection cleared");
+				break;
+			}
+		}
+	}
+	
+	
+	
+	boolean isShiftPressed() {
+		return Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) ||
+				Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT);
+	}
+	
+	
+	
+	void filterForFabbers(Collection<Entity> entities) {
+		Iterator<Entity> iter 	= entities.iterator();
+		while (iter.hasNext()) {
+			Entity e = iter.next();
+			if (e.getFabberModule() == null) {
+				iter.remove();
+			}
+		}
+	}
+	
+	
+	
+	Set<Entity> entitiesBelow(Vector2 pos) {
+		float size 		= 0.6f;
+		final Vector2 a = pos.cpy().add(-size, -size);
+		final Vector2 b = pos.cpy().add( size,  size);
+		final Vector2 c = pos.cpy().add( size, -size);
+		final Vector2 d = pos.cpy().add(-size,  size);
+		
+		game.addDebugRenderTask(new Runnable() {
+			@Override
+			public void run() {
+				game.shapeRenderer.line(a, b);
+				game.shapeRenderer.line(c, d);
+			}
+		});
+		
+		RayCastForEntitiesBelow raycast = new RayCastForEntitiesBelow();
+		game.physicsWorld.rayCast(raycast, a, b);
+		game.physicsWorld.rayCast(raycast, c, d);
+		return raycast.entities;
+	}
+	
+	class RayCastForEntitiesBelow implements RayCastCallback {
+		
+		Set<Entity> entities = new HashSet<Entity>(8);
 		
 		@Override
 		public float reportRayFixture(Fixture fixture, Vector2 point,
@@ -78,14 +133,14 @@ public class InputProcessor extends InputAdapter {
 			Object data = fixture.getUserData();
 			if (data != null) {
 				Entity e = (Entity)data;
-				if (e.getFabberModule() != null) {
-					fabbers.add(e);
-				}
+				entities.add(e);
 			}
-			return 0;
+			return 1;
 		}
 	}
 
+	
+	
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
 		if (isPan) {
@@ -106,19 +161,25 @@ public class InputProcessor extends InputAdapter {
 	}
 
 	@Override
-	public boolean scrolled(int amount) {
-		return false;
-	}
-
-	@Override
 	public boolean keyDown(int keycode) {
 		switch (keycode) {
 		case Input.Keys.ESCAPE:
-			Gdx.app.exit();
+			if (commandMode == CommandMode.None) {
+				Gdx.app.exit();
+			} else {
+				setCommandMode(CommandMode.None);
+			}
+			return true;
+		case Input.Keys.T:
+			setCommandMode(CommandMode.BuildTower);
 			return true;
 		default:
 			return false;
 		}
+	}
+
+	private void setCommandMode(CommandMode mode) {
+		commandMode = mode;
 	}
 	
 }
