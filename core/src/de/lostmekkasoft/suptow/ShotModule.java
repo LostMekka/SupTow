@@ -25,6 +25,8 @@ public class ShotModule {
 		this.velocity = new Vector2(target)
 				.sub(start)
 				.setLength2(velocity * velocity);
+		float r = (float)Math.random();
+		this.velocity.rotate(r * 10.0f - 5.0f);
 		this.damage = damage;
 		this.team = team;
 		this.lifeTime = lifeTime;

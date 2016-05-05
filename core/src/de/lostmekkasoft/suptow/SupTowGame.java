@@ -146,7 +146,7 @@ public class SupTowGame extends ApplicationAdapter {
 	public Entity createTower(Vector2 position) {
 		Entity e = Entity.create(physicsWorld, position, 2f, 0, true);
 		e.setHealthModule(new HealthModule(500f));
-		e.setWeaponsModule(new WeaponsModule(1f, 8f, 3f, 20f, 16f));
+		e.setWeaponsModule(new WeaponsModule(0.08f, 16f, 3f, 4f, 16f));
 		return towers.add(e) ? e : null;
 	}
 	
