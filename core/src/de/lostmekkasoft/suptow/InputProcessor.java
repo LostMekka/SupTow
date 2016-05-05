@@ -11,7 +11,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.RayCastCallback;
 
-public class SupTowInputProcessor extends InputAdapter {
+public class InputProcessor extends InputAdapter {
 
 	SupTowGame game;
 	boolean isPan;
@@ -20,7 +20,7 @@ public class SupTowInputProcessor extends InputAdapter {
 	
 	Set<Entity> selection = new HashSet<Entity>(8);
 	
-	public SupTowInputProcessor(SupTowGame game) {
+	public InputProcessor(SupTowGame game) {
 		this.game = game;
 	}
 	

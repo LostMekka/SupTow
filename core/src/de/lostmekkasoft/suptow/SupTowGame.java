@@ -94,7 +94,7 @@ public class SupTowGame extends ApplicationAdapter {
 		createEnemy(new Vector2(-6f, -4f));
 		createTower(new Vector2(4f, -1f));
 		
-		Gdx.input.setInputProcessor(new SupTowInputProcessor(this));
+		Gdx.input.setInputProcessor(new InputProcessor(this));
 		
 		Timer.schedule(new DebugPrint(), 1, 1);
 	}
