@@ -18,8 +18,11 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Random;
 
 public class SupTowGame extends ApplicationAdapter {
+
+	public static final Random random = new Random();
 
 	private static final float PHYSICS_TIME_STEP = 1f / 60f;
 	
@@ -35,7 +38,7 @@ public class SupTowGame extends ApplicationAdapter {
 	ShapeRenderer shapeRenderer;
 	OrthographicCamera camera;
 	Viewport viewport;
-	EntityList fabbers, towers, enemies, shots;
+	EntityList fabbers, towers, enemies, shots, resourcePoints;
 	ArrayList<Runnable> debugRenderTasks = new ArrayList<Runnable>(8);
 
 	public SupTowGame() {
@@ -67,6 +70,7 @@ public class SupTowGame extends ApplicationAdapter {
 		towers = new EntityList();
 		enemies = new EntityList();
 		shots = new EntityList();
+		resourcePoints = new EntityList();
 		createFabber(Vector2.Zero)
 				.getMovementModule()
 				.setTarget(new Vector2(2f, 1f));
@@ -94,10 +98,12 @@ public class SupTowGame extends ApplicationAdapter {
 		for (Entity e : towers) updateEntity(e, deltaTime);
 		for (Entity e : enemies) updateEntity(e, deltaTime);
 		for (Entity e : shots) updateEntity(e, deltaTime);
+		// resource points need no update
 		fabbers.applyRemoval();
 		towers.applyRemoval();
 		enemies.applyRemoval();
 		shots.applyRemoval();
+		resourcePoints.applyRemoval();
 		doPhysicsStep(deltaTime);
 		
 		// render
@@ -146,7 +152,7 @@ public class SupTowGame extends ApplicationAdapter {
 	public Entity createTower(Vector2 position) {
 		Entity e = Entity.create(physicsWorld, position, 2f, 0, true);
 		e.setHealthModule(new HealthModule(500f));
-		e.setWeaponsModule(new WeaponsModule(1f, 8f, 3f, 20f, 16f));
+		e.setWeaponsModule(new WeaponsModule(0.2f, 8f, 3f, 20f, 16f));
 		return towers.add(e) ? e : null;
 	}
 	
@@ -154,31 +160,52 @@ public class SupTowGame extends ApplicationAdapter {
 		Entity e = Entity.create(physicsWorld, position, 1.5f, 1, false);
 		e.setMovementModule(new MovementModule(3.5f, 1f, 1f));
 		e.setHealthModule(new HealthModule(200f));
-		e.setWeaponsModule(new WeaponsModule(1f, 8f, 3f, 20f, 16f));
+		e.setWeaponsModule(new WeaponsModule(0.2f, 8f, 3f, 20f, 16f));
 		return enemies.add(e) ? e : null;
 	}
 	
 	public Entity createShot(Entity source, Vector2 target) {
-		WeaponsModule w = source.getWeaponsModule();
-		if (w == null) return null;
-		if (target == null) return null;
+		WeaponsModule wm = source.getWeaponsModule();
+		if (wm == null || target == null) return null;
 		Vector2 start = source.physicsBody.getPosition();
-		float vel = w.shotVelocity;
-		float dmg = w.damage;
+		float vel = wm.shotVelocity;
+		float dmg = wm.damage;
 		int team = source.team;
-		float timer = w.shotLifeTime;
+		float timer = wm.shotLifeTime;
 		
 		Entity e = Entity.create(physicsWorld, start, 0.3f, source.team, false);
 		e.setShotModule(new ShotModule(start, target, vel, dmg, team, timer));
 		return shots.add(e) ? e : null;
 	}
 	
+	public Entity createResourcePointFromEntity(Entity source) {
+		HealthModule hm = source.getHealthModule();
+		if (hm == null) return null;
+		Vector2 pos = source.physicsBody.getPosition();
+		float integrity = random.nextFloat();
+		float rad = source.radius * (integrity * 0.3f + 0.4f);
+		float max = hm.maxHealth;
+		float res = max * (integrity * 0.4f + 0.2f);
+		
+		Entity e = Entity.create(physicsWorld, pos, rad, -1, true);
+		e.setResourcePointModule(new ResourcePointModule(res, max));
+		return resourcePoints.add(e) ? e : null;
+	}
+	
 	public void destroyEntity(Entity e) {
 		physicsWorld.destroyBody(e.physicsBody);
-		fabbers.markToRemove(e);
-		towers.markToRemove(e);
-		enemies.markToRemove(e);
-		shots.markToRemove(e);
+		if (e.getResourcePointModule() == null) {
+			// no resource point
+			fabbers.markToRemove(e);
+			towers.markToRemove(e);
+			enemies.markToRemove(e);
+			shots.markToRemove(e);
+			// create a resource point as wreckage
+			createResourcePointFromEntity(e);
+		} else {
+			// resource point
+			resourcePoints.markToRemove(e);
+		}
 	}
 	
 	public Collection<Entity> getTargetableEntities() {
@@ -187,6 +214,7 @@ public class SupTowGame extends ApplicationAdapter {
 		towers.addAllToCollection(answer);
 		enemies.addAllToCollection(answer);
 		// shots are not targetable
+		// resource points are not targetable
 		return answer;
 	}
 

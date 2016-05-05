@@ -18,11 +18,12 @@ public class Entity {
 	public final int team;
 	public final float radius;
 	
-	private MovementModule 	movementModule 	= null;
-	private HealthModule 	healthModule 	= null;
-	private WeaponsModule 	weaponsModule 	= null;
-	private ShotModule 		shotModule 		= null;
-	private FabberModule	fabberModule	= null;
+	private MovementModule		movementModule		= null;
+	private HealthModule		healthModule		= null;
+	private WeaponsModule		weaponsModule		= null;
+	private ShotModule			shotModule			= null;
+	private FabberModule		fabberModule		= null;
+	private ResourcePointModule resourcePointModule = null;
 
 	public FabberModule getFabberModule() {
 		return fabberModule;
@@ -94,6 +95,14 @@ public class Entity {
 		this.shotModule = shotModule;
 		shotModule.init(this);
 	}
+
+	public ResourcePointModule getResourcePointModule() {
+		return resourcePointModule;
+	}
+
+	public void setResourcePointModule(ResourcePointModule resourcePointModule) {
+		this.resourcePointModule = resourcePointModule;
+	}
 	
 	public void update(float deltaTime) {
 		if (movementModule != null) movementModule.update(this, deltaTime);
@@ -104,6 +113,7 @@ public class Entity {
 	public boolean needsToBeRemoved() {
 		if (healthModule != null && !healthModule.isAlive()) return true;
 		if (shotModule != null && !shotModule.isAlive()) return true;
+		if (resourcePointModule != null && !resourcePointModule.isAlive()) return true;
 		return false;
 	}
 	
