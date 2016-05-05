@@ -18,7 +18,6 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.ListIterator;
 
 public class SupTowGame extends ApplicationAdapter {
 
