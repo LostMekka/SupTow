@@ -6,6 +6,9 @@
 
 package de.lostmekkasoft.suptow;
 
+import com.badlogic.gdx.math.Vector2;
+import java.util.Collection;
+
 /**
  *
  * @author fine
@@ -18,8 +21,8 @@ public class WeaponsModule {
 	public final float damage;
 	public final float range;
 	
-	private Entity currentTarget = null;
 	private float timer = 0;
+	private Entity self = null;
 
 	public WeaponsModule(float reloadTime, float shotVelocity, 
 			float shotLifeTime, float damage, float range) {
@@ -30,19 +33,36 @@ public class WeaponsModule {
 		this.range = range;
 	}
 
-	public Entity getCurrentTarget() {
-		return currentTarget;
+	public boolean canTarget(Entity target) {
+		return target.team != self.team
+				&& self.getDistanceTo(target) <= range
+				&& timer <= 0;
 	}
-
-	public void setCurrentTarget(Entity currentTarget) {
-		this.currentTarget = currentTarget;
+	
+	public void init(Entity e) {
+		self = e;
 	}
 	
 	public void update(float deltaTime) {
 		timer = Math.max(0f, timer - deltaTime);
 		if (timer == 0f) {
-			// TODO: shoot stuff!
+			Collection<Entity> targets = SupTowGame.getInstance().getTargetableEntities();
+			Entity nearest = null;
+			float distance = Float.MAX_VALUE;
+			for (Entity e : targets) {
+				float d = self.getDistanceTo(e);
+				if (d < distance && e.team != self.team) {
+					distance = d;
+					nearest = e;
+				}
+			}
+			if (nearest != null && distance <= range) shootAt(nearest);
 		}
+	}
+	
+	private void shootAt(Entity target) {
+		SupTowGame.getInstance().createShot(self, target.physicsBody.getPosition());
+		timer += reloadTime;
 	}
 	
 }
