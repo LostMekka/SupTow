@@ -14,10 +14,16 @@ import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import java.util.Collection;
 
 public class SupTowGame extends ApplicationAdapter {
 
 	private static final float PHYSICS_TIME_STEP = 1f / 60f;
+	
+	private static SupTowGame instance = null;
+	public static SupTowGame getInstance() {
+		return instance;
+	}
 
 	SpriteBatch batch;
 	Texture img;
@@ -26,7 +32,11 @@ public class SupTowGame extends ApplicationAdapter {
 	ShapeRenderer shapeRenderer;
 	OrthographicCamera camera;
 	Viewport viewport;
-	EntityList fabbers, towers, enemies;
+	EntityList fabbers, towers, enemies, shots;
+
+	public SupTowGame() {
+		instance = this;
+	}
 	
 	@Override
 	public void resize(int width, int height) {
@@ -54,6 +64,7 @@ public class SupTowGame extends ApplicationAdapter {
 		createFabber(Vector2.Zero)
 				.getMovementModule()
 				.setTarget(new Vector2(2f, 1f));
+		createEnemy(new Vector2(4f, 2f));
 		
 		Gdx.input.setInputProcessor(new SupTowInputProcessor(this));
 		
@@ -69,16 +80,16 @@ public class SupTowGame extends ApplicationAdapter {
 
 	@Override
 	public void render () {
-		float delta = Gdx.graphics.getDeltaTime();
+		float deltaTime = Gdx.graphics.getDeltaTime();
 		
 		// update
-		for (Entity e : fabbers) e.update(delta);
-		for (Entity e : towers) e.update(delta);
-		for (Entity e : enemies) e.update(delta);
+		for (Entity e : fabbers) updateEntity(e, deltaTime);
+		for (Entity e : towers) updateEntity(e, deltaTime);
+		for (Entity e : enemies) updateEntity(e, deltaTime);
 		fabbers.applyRemoval();
 		towers.applyRemoval();
 		enemies.applyRemoval();
-		doPhysicsStep(delta);
+		doPhysicsStep(deltaTime);
 		
 		// render
 		Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -104,28 +115,57 @@ public class SupTowGame extends ApplicationAdapter {
 			_physicsStepTimer -= PHYSICS_TIME_STEP;
 		}
 	}
+	
+	private void updateEntity(Entity e, float deltaTime) {
+		e.update(deltaTime);
+		if (e.needsToBeRemoved()) destroyEntity(e);
+	} 
 
 	public Entity createFabber(Vector2 position) {
-		Entity e = Entity.create(physicsWorld, position, 1f);
+		Entity e = Entity.create(physicsWorld, position, 1f, 0);
 		e.setMovementModule(new MovementModule(2.5f, 2f, 0.25f));
+		e.setHealthModule(new HealthModule(100f));
 		return fabbers.add(e) ? e : null;
 	}
 	
 	public Entity createTower(Vector2 position) {
-		Entity e = Entity.create(physicsWorld, position, 2f);
+		Entity e = Entity.create(physicsWorld, position, 2f, 0);
+		e.setHealthModule(new HealthModule(500f));
+		e.setWeaponsModule(new WeaponsModule(1f, 2f, 20f, 6f));
 		return towers.add(e) ? e : null;
 	}
 	
 	public Entity createEnemy(Vector2 position) {
-		Entity e = Entity.create(physicsWorld, position, 1.5f);
+		Entity e = Entity.create(physicsWorld, position, 1.5f, 1);
+		e.setMovementModule(new MovementModule(2.5f, 1f, 1f));
+		e.setHealthModule(new HealthModule(200f));
+		e.setWeaponsModule(new WeaponsModule(1f, 2f, 20f, 6f));
+		return enemies.add(e) ? e : null;
+	}
+	
+	public Entity createShot(Entity source) {
+		WeaponsModule w = source.getWeaponsModule();
+		if (w == null) return null;
+		Entity target = w.getCurrentTarget();
+		if (target == null) return null;
+		Vector2 targetPos = target.physicsBody.getPosition();
+		
+		Entity e = Entity.create(physicsWorld, source.physicsBody.getPosition(), 1.5f, 1);
+		MovementModule movement = new MovementModule(2.5f, 1f, 1f);
+		movement.setTarget(targetPos, -1f); // hack for never stopping
+		e.setMovementModule(movement);
 		return enemies.add(e) ? e : null;
 	}
 	
 	public void destroyEntity(Entity e) {
-		physicsWorld.destroyBody(e.getPhysicsBody());
+		physicsWorld.destroyBody(e.physicsBody);
 		fabbers.markToRemove(e);
 		towers.markToRemove(e);
 		enemies.markToRemove(e);
+	}
+	
+	public Collection<Entity> getTargetableEntities(Entity source) {
+		return null;
 	}
 	
 }

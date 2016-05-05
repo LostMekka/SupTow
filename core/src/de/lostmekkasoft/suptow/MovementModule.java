@@ -7,7 +7,6 @@
 package de.lostmekkasoft.suptow;
 
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.box2d.Body;
 
 /**
  *
@@ -44,19 +43,18 @@ public class MovementModule {
 	}
 	
 	public void init(Entity e) {
-		e.getPhysicsBody().setLinearDamping(linearDamping);
+		e.physicsBody.setLinearDamping(linearDamping);
 	}
 
 	public void update(Entity e, float deltaTime) {
 		if (target == null) return;
-		Body b = e.getPhysicsBody();
-		Vector2 diff = new Vector2(target).sub(b.getPosition());
+		Vector2 diff = new Vector2(target).sub(e.physicsBody.getPosition());
 		if (diff.len2() <= squaredMinDistance) {
 			unsetTarget();
 			return;
 		}
 		diff.setLength2(sqaredMovementForce);
-		e.getPhysicsBody().applyForceToCenter(diff, true);
+		e.physicsBody.applyForceToCenter(diff, true);
 	}
 	
 }

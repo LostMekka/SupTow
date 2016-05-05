@@ -13,11 +13,14 @@ import com.badlogic.gdx.physics.box2d.World;
  */
 public class Entity {
 	
-	private final Body physicsBody;
+	public final Body physicsBody;
+	public final int team;
 	
 	private MovementModule movementModule = null;
+	private HealthModule healthModule = null;
+	private WeaponsModule weaponsModule = null;
 
-	public static Entity create(World world, Vector2 position, float radius){
+	public static Entity create(World world, Vector2 position, float radius, int team){
 		BodyDef bodyDef = new BodyDef();
 		bodyDef.type = BodyDef.BodyType.DynamicBody;
 		bodyDef.position.set(position.x, position.y);
@@ -31,15 +34,12 @@ public class Entity {
 		fixtureDef.restitution = 0.3f;
 		body.createFixture(fixtureDef);
 		circle.dispose();
-		return new Entity(body);
+		return new Entity(body, team);
 	}
 	
-	private Entity(Body body) {
-		this.physicsBody = body;
-	}
-
-	public Body getPhysicsBody() {
-		return physicsBody;
+	public Entity(Body physicsBody, int team) {
+		this.physicsBody = physicsBody;
+		this.team = team;
 	}
 
 	public MovementModule getMovementModule() {
@@ -50,9 +50,31 @@ public class Entity {
 		this.movementModule = movementModule;
 		movementModule.init(this);
 	}
+
+	public HealthModule getHealthModule() {
+		return healthModule;
+	}
+
+	public void setHealthModule(HealthModule healthModule) {
+		this.healthModule = healthModule;
+	}
+
+	public WeaponsModule getWeaponsModule() {
+		return weaponsModule;
+	}
+
+	public void setWeaponsModule(WeaponsModule weaponsModule) {
+		this.weaponsModule = weaponsModule;
+	}
 	
-	public void update(float delta) {
-		if (movementModule != null) movementModule.update(this, delta);
+	public void update(float deltaTime) {
+		if (movementModule != null) movementModule.update(this, deltaTime);
+		if (weaponsModule != null) weaponsModule.update(deltaTime);
+	}
+	
+	public boolean needsToBeRemoved() {
+		if (healthModule != null && !healthModule.isAlive()) return true;
+		return false;
 	}
 	
 }
