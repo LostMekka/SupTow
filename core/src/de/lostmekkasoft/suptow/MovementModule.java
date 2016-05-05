@@ -20,6 +20,15 @@ public class MovementModule {
 	
 	private Vector2 target = null;
 	private float squaredMinDistance;
+	private TargetReachedCallback targetReachedCallback;
+
+	public TargetReachedCallback getTargetReachedCallback() {
+		return targetReachedCallback;
+	}
+
+	public void setTargetReachedCallback(TargetReachedCallback targetReachedCallback) {
+		this.targetReachedCallback = targetReachedCallback;
+	}
 
 	public MovementModule(float movementForce, float linearDamping, float defaultMinDistance) {
 		sqaredMovementForce = movementForce * movementForce;
@@ -42,6 +51,13 @@ public class MovementModule {
 		squaredMinDistance = 0f;
 	}
 	
+	void targetReached() {
+		if (targetReachedCallback != null) {
+			targetReachedCallback.run(target);
+		}
+		unsetTarget();
+	}
+	
 	public void init(Entity e) {
 		e.physicsBody.setLinearDamping(linearDamping);
 	}
@@ -50,7 +66,7 @@ public class MovementModule {
 		if (target == null) return;
 		Vector2 diff = new Vector2(target).sub(e.physicsBody.getPosition());
 		if (diff.len2() <= squaredMinDistance) {
-			unsetTarget();
+			targetReached();
 			return;
 		}
 		diff.setLength2(sqaredMovementForce);
