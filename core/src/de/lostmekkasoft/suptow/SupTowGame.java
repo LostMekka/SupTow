@@ -14,9 +14,10 @@ import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.ListIterator;
 
 public class SupTowGame extends ApplicationAdapter {
 
@@ -35,6 +36,7 @@ public class SupTowGame extends ApplicationAdapter {
 	OrthographicCamera camera;
 	Viewport viewport;
 	EntityList fabbers, towers, enemies, shots;
+	ArrayList<Runnable> debugRenderTasks = new ArrayList<Runnable>(8);
 
 	public SupTowGame() {
 		instance = this;
@@ -108,7 +110,12 @@ public class SupTowGame extends ApplicationAdapter {
 		camera.update();
 		shapeRenderer.setProjectionMatrix(camera.combined);
 		shapeRenderer.begin();
-		// TODO: render additional shapes here
+		
+		for (Runnable task : debugRenderTasks) {
+			task.run();
+		}
+		debugRenderTasks.clear();
+		
 		shapeRenderer.end();
 		debugRenderer.render(physicsWorld, camera.combined);
 	}
@@ -132,6 +139,7 @@ public class SupTowGame extends ApplicationAdapter {
 		Entity e = Entity.create(physicsWorld, position, 1f, 0, false);
 		e.setMovementModule(new MovementModule(3.5f, 2f, 0.25f));
 		e.setHealthModule(new HealthModule(100f));
+		e.setFabberModule(new FabberModule());
 		return fabbers.add(e) ? e : null;
 	}
 	
@@ -181,5 +189,23 @@ public class SupTowGame extends ApplicationAdapter {
 		// shots are not targetable
 		return answer;
 	}
-	
+
+	public void addDebugRenderTask(Runnable runnable) {
+		debugRenderTasks.add(runnable);
+	}
+
+	public void orderBuildTower(Collection<Entity> entities, Vector2 pos) {
+		System.out.println("orderBuildTower");
+		final Vector2 target = pos.cpy();
+		for (Entity e : entities) {
+			MovementModule movement = e.getMovementModule();
+			movement.setTarget(target.cpy(), 3.5f);
+			movement.setTargetReachedCallback(new TargetReachedCallback() {
+				@Override
+				public void run(Vector2 target) {
+					createTower(target);
+				}
+			});
+		}
+	}
 }

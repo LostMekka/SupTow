@@ -18,10 +18,19 @@ public class Entity {
 	public final int team;
 	public final float radius;
 	
-	private MovementModule movementModule = null;
-	private HealthModule healthModule = null;
-	private WeaponsModule weaponsModule = null;
-	private ShotModule shotModule = null;
+	private MovementModule 	movementModule 	= null;
+	private HealthModule 	healthModule 	= null;
+	private WeaponsModule 	weaponsModule 	= null;
+	private ShotModule 		shotModule 		= null;
+	private FabberModule	fabberModule	= null;
+
+	public FabberModule getFabberModule() {
+		return fabberModule;
+	}
+
+	public void setFabberModule(FabberModule fabberModule) {
+		this.fabberModule = fabberModule;
+	}
 
 	public static Entity create(World world, Vector2 position, float radius, 
 			int team, boolean isStatic){
