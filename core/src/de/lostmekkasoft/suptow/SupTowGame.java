@@ -18,8 +18,7 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
-import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
 public class SupTowGame extends ApplicationAdapter {
 
@@ -38,7 +37,7 @@ public class SupTowGame extends ApplicationAdapter {
 	Box2DDebugRenderer debugRenderer;
 	ShapeRenderer shapeRenderer;
 	OrthographicCamera camera;
-	Viewport viewport;
+	ScreenViewport viewport;
 	EntityList fabbers, towers, enemies, shots, resourcePoints;
 	ArrayList<Runnable> debugRenderTasks = new ArrayList<Runnable>(8);
 
@@ -88,7 +87,8 @@ public class SupTowGame extends ApplicationAdapter {
 		debugRenderer.setDrawInactiveBodies(true);
 		
 		camera = new OrthographicCamera();
-		viewport = new FitViewport(50, 25, camera);
+		viewport = new ScreenViewport(camera);
+		viewport.setUnitsPerPixel(1.0f / 8.0f);
 
 		shapeRenderer = new ShapeRenderer();
 		shapeRenderer.setAutoShapeType(true);
