@@ -21,7 +21,6 @@ public class Entity {
 		BodyDef bodyDef = new BodyDef();
 		bodyDef.type = BodyDef.BodyType.DynamicBody;
 		bodyDef.position.set(position.x, position.y);
-		bodyDef.linearDamping = 0.5f;
 		Body body = world.createBody(bodyDef);
 		CircleShape circle = new CircleShape();
 		circle.setRadius(radius);
@@ -49,6 +48,7 @@ public class Entity {
 
 	public void setMovementModule(MovementModule movementModule) {
 		this.movementModule = movementModule;
+		movementModule.init(this);
 	}
 	
 	public void update(float delta) {

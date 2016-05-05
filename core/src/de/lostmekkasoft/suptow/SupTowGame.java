@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
@@ -18,6 +19,7 @@ public class SupTowGame extends ApplicationAdapter {
 	Texture img;
 	World physicsWorld;
 	Box2DDebugRenderer debugRenderer;
+	ShapeRenderer shapeRenderer;
 	OrthographicCamera camera;
 	EntityList fabbers, towers, enemies;
 	
@@ -30,13 +32,15 @@ public class SupTowGame extends ApplicationAdapter {
 		debugRenderer.setDrawContacts(true);
 		debugRenderer.setDrawInactiveBodies(true);
 		debugRenderer.setDrawVelocities(true);
+		shapeRenderer = new ShapeRenderer();
+		shapeRenderer.setAutoShapeType(true);
 		camera = new OrthographicCamera(25, 20);
 		fabbers = new EntityList();
 		towers = new EntityList();
 		enemies = new EntityList();
 		createFabber(Vector2.Zero)
 				.getMovementModule()
-				.setTarget(new Vector2(0.5f, 0.5f));
+				.setTarget(new Vector2(2f, 1f));
 	}
 
 	@Override
@@ -58,6 +62,10 @@ public class SupTowGame extends ApplicationAdapter {
 		batch.begin();
 		// TODO: render entities here
 		batch.end();
+		shapeRenderer.setProjectionMatrix(camera.combined);
+		shapeRenderer.begin();
+		// TODO: render additional shapes here
+		shapeRenderer.end();
 		debugRenderer.render(physicsWorld, camera.combined);
 	}
 	
@@ -73,7 +81,7 @@ public class SupTowGame extends ApplicationAdapter {
 
 	public Entity createFabber(Vector2 position) {
 		Entity e = Entity.create(physicsWorld, position, 1f);
-		e.setMovementModule(new MovementModule(1f));
+		e.setMovementModule(new MovementModule(2.5f, 2f, 0.25f));
 		return fabbers.add(e) ? e : null;
 	}
 	
