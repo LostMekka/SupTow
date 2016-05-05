@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
@@ -46,23 +47,40 @@ public class SupTowGame extends ApplicationAdapter {
 	public void resize(int width, int height) {
 		viewport.update(width, height);
 	}
+	
+	static class Textures {
+		static Texture 		 sprites;
+		static TextureRegion fabber;
+		static TextureRegion tower;
+		static TextureRegion shot;
+		static TextureRegion enemy;
+	}
 
 	@Override
 	public void create () {
-		batch = new SpriteBatch();
-		img = new Texture("badlogic.jpg");
+		batch 	= new SpriteBatch();
+		
+		Textures.sprites = new Texture("sprites.png");
+		TextureRegion[][] regions = TextureRegion.split(Textures.sprites, 32, 32);
+		Textures.fabber = regions[0][0];
+		Textures.tower	= regions[1][0];
+		Textures.shot   = regions[0][1];
+		Textures.enemy  = regions[1][1];
+		
 		physicsWorld = new World(Vector2.Zero, true);
 		physicsWorld.setContactListener(new ContactListener());
+		
 		debugRenderer = new Box2DDebugRenderer();
 		debugRenderer.setDrawContacts(true);
 		debugRenderer.setDrawInactiveBodies(true);
 		debugRenderer.setDrawVelocities(true);
 		
 		camera = new OrthographicCamera();
-		viewport = new FitViewport(25, 20, camera);
+		viewport = new FitViewport(50, 25, camera);
 
 		shapeRenderer = new ShapeRenderer();
 		shapeRenderer.setAutoShapeType(true);
+		
 		fabbers = new EntityList();
 		towers = new EntityList();
 		enemies = new EntityList();
@@ -117,6 +135,22 @@ public class SupTowGame extends ApplicationAdapter {
 		debugRenderTasks.clear();
 		
 		shapeRenderer.end();
+		
+		
+		
+		batch.setProjectionMatrix(camera.combined);
+		batch.begin();
+		
+		for (Entity e : fabbers) {
+			Vector2 pos = e.physicsBody.getPosition();
+			float r = e.radius;
+			batch.draw(Textures.fabber, pos.x-r*2, pos.y-r*2, r*4, r*4);
+		}
+		
+		batch.end();
+		
+		
+		
 		debugRenderer.render(physicsWorld, camera.combined);
 	}
 	
