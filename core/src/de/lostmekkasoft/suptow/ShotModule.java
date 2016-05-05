@@ -7,6 +7,7 @@
 package de.lostmekkasoft.suptow;
 
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.BodyDef;
 
 /**
  *
@@ -33,10 +34,11 @@ public class ShotModule {
 	}
 	
 	public void init(Entity e) {
-		e.physicsBody.setLinearVelocity(velocity);
-		e.physicsBody.setLinearDamping(0);
+		e.createFixture().setSensor(true);
 		e.physicsBody.setBullet(true);
-		e.physicsBody.getFixtureList().get(0).setSensor(true);
+		e.physicsBody.setType(BodyDef.BodyType.DynamicBody);
+		e.physicsBody.setLinearDamping(0);
+		e.physicsBody.setLinearVelocity(velocity);
 	}
 	
 	public void update(float deltaTime) {

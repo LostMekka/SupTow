@@ -1,5 +1,6 @@
 package de.lostmekkasoft.suptow;
 
+import com.badlogic.gdx.Gdx;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -108,5 +109,11 @@ public class SupTowInputProcessor extends InputAdapter {
 	public boolean scrolled(int amount) {
 		return false;
 	}
-		
+
+	@Override
+	public boolean keyDown(int keycode) {
+		if (keycode == Input.Keys.ESCAPE) Gdx.app.exit();
+		return false;
+	}
+	
 }

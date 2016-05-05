@@ -7,6 +7,7 @@
 package de.lostmekkasoft.suptow;
 
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.BodyDef;
 
 /**
  *
@@ -59,6 +60,7 @@ public class MovementModule {
 	}
 	
 	public void init(Entity e) {
+		e.physicsBody.setType(BodyDef.BodyType.DynamicBody);
 		e.physicsBody.setLinearDamping(linearDamping);
 	}
 
