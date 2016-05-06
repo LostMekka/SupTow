@@ -13,7 +13,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
  *
  * @author fine
  */
-public class MovementModule {
+public class MovementModule extends EntityModule {
 	
 	private final float sqaredMovementForce;
 	private final float linearDamping;
@@ -23,14 +23,6 @@ public class MovementModule {
 	private float squaredMinDistance;
 	private TargetReachedCallback targetReachedCallback;
 
-	public TargetReachedCallback getTargetReachedCallback() {
-		return targetReachedCallback;
-	}
-
-	public void setTargetReachedCallback(TargetReachedCallback targetReachedCallback) {
-		this.targetReachedCallback = targetReachedCallback;
-	}
-
 	public MovementModule(float movementForce, float linearDamping, float defaultMinDistance) {
 		sqaredMovementForce = movementForce * movementForce;
 		sqaredDefaultMinDistance = defaultMinDistance * defaultMinDistance;
@@ -38,41 +30,50 @@ public class MovementModule {
 	}
 
 	public void setTarget(Vector2 target) {
-		this.target = target;
-		squaredMinDistance = sqaredDefaultMinDistance;
+		setTarget(target, sqaredDefaultMinDistance, null);
+	}
+
+	public void setTarget(Vector2 target, TargetReachedCallback cb) {
+		setTarget(target, sqaredDefaultMinDistance, cb);
 	}
 
 	public void setTarget(Vector2 target, float minDistance) {
+		setTarget(target, minDistance, null);
+	}
+	
+	public void setTarget(Vector2 target, float minDistance, TargetReachedCallback cb) {
 		this.target = target;
 		squaredMinDistance = minDistance * minDistance;
+		targetReachedCallback = cb;
 	}
 	
 	public void unsetTarget() {
 		target = null;
 		squaredMinDistance = 0f;
+		targetReachedCallback = null;
 	}
 	
 	void targetReached() {
-		if (targetReachedCallback != null) {
-			targetReachedCallback.run(target);
-		}
+		if (targetReachedCallback != null) targetReachedCallback.run(target);
 		unsetTarget();
 	}
 	
-	public void init(Entity e) {
-		e.physicsBody.setType(BodyDef.BodyType.DynamicBody);
-		e.physicsBody.setLinearDamping(linearDamping);
+	@Override
+	public void onInit() {
+		getBody().setType(BodyDef.BodyType.DynamicBody);
+		getBody().setLinearDamping(linearDamping);
 	}
 
-	public void update(Entity e, float deltaTime) {
+	@Override
+	public void update(float deltaTime) {
 		if (target == null) return;
-		Vector2 diff = new Vector2(target).sub(e.physicsBody.getPosition());
+		Vector2 diff = new Vector2(target).sub(getPosition());
 		if (diff.len2() <= squaredMinDistance) {
 			targetReached();
 			return;
 		}
 		diff.setLength2(sqaredMovementForce);
-		e.physicsBody.applyForceToCenter(diff, true);
+		getBody().applyForceToCenter(diff, true);
 	}
 	
 }

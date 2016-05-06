@@ -13,13 +13,14 @@ import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.QueryCallback;
 import com.badlogic.gdx.physics.box2d.RayCastCallback;
+import java.util.ArrayList;
 
 public class InputProcessor extends InputAdapter {
 
 	SupTowGame game;
 	boolean isPan;
-	Vector3 touchStart;
 	Vector3 touchLast;
 	
 	enum CommandMode {
@@ -36,47 +37,76 @@ public class InputProcessor extends InputAdapter {
 	
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		if (button == Input.Buttons.RIGHT) {
-			isPan 				= true;
-			Vector3 touchScreen	= new Vector3(screenX, screenY, 0);
-			touchStart 			= touchScreen;
-			touchLast 			= touchScreen;
-		}
-		if (button == Input.Buttons.LEFT) {
-			isPan				= false;
-			selectAndCommand(screenX, screenY);
+		if (isSpacePressed() || button == Input.Buttons.MIDDLE) {
+			isPan     = true;
+			touchLast = new Vector3(screenX, screenY, 0);
+		} else {
+			isPan            = false;
+			Vector2 position = new Vector2(screenX, screenY);
+			game.viewport.unproject(position);
+			
+			if (button == Input.Buttons.LEFT) {
+				onLeftClick(position);
+			} else if (button == Input.Buttons.RIGHT) {
+				onRightClick(position);
+			}
 		}
 		return true;
 	}
 	
 	
 	
-	void selectAndCommand(int screenX, int screenY) {
-		Vector2 click		= new Vector2(screenX, screenY);
-		game.viewport.unproject(click);
-		
-		Set<Entity> entities = entitiesBelow(click);
-		List<Entity> clickedFabbers = new LinkedList<Entity>(entities);
+	void onLeftClick(Vector2 position) {
+		List<Entity> clickedFabbers = entitiesBelow(position);
 		filterForFabbers(clickedFabbers);
-
-		if (clickedFabbers.size() > 0 && selection.size() >= 0) {
-			if (isShiftPressed()) {
-				selection.addAll(clickedFabbers);
-			} else {
-				selection.clear();
-				selection.addAll(clickedFabbers);
-			}
-			System.out.println("selected "+selection.size());
-		}
-		else if (clickedFabbers.size() == 0 && selection.size() > 0) {
+		
+		if (selection.isEmpty()) {
+			selectEntities(clickedFabbers);
+		} else {
 			switch (commandMode) {
 			case BuildTower:
-				game.orderBuildTower(selection, click);
+				game.orderBuildTower(selection, position); //TODO: use FabberModule instead
 				break;
 			case None:
-				selection.clear();
-				System.out.println("selection cleared");
+				selectEntities(clickedFabbers);
 				break;
+			}
+			if (!isShiftPressed()) commandMode = CommandMode.None;
+		}
+	}
+	
+	void selectEntities(List<Entity> entities) {
+		if (!isShiftPressed())  selection.clear();
+		selection.addAll(entities);
+		System.out.println("selected "+selection.size());
+	}
+	
+	
+	
+	void onRightClick(Vector2 position) {
+		if (!selection.isEmpty()) {
+			if (commandMode == CommandMode.None) {
+				List<Entity> entities = entitiesBelow(position);
+				filterForResourcePoints(entities);
+				if (entities.isEmpty()) {
+					for (Entity e : selection) {
+						MovementModule mm = e.getMovementModule();
+						if (mm != null) {
+							FabberModule fm = e.getFabberModule();
+							if (fm != null) fm.stop();
+							mm.setTarget(position);
+						}
+					}
+				} else {
+					System.out.println("reclaiming resource point");
+					Entity resourcePoint = entities.get(0);
+					for (Entity e : selection) {
+						FabberModule fm = e.getFabberModule();
+						if (fm != null) fm.harvestResources(resourcePoint);
+					}
+				}
+			} else {
+				commandMode = CommandMode.None;
 			}
 		}
 	}
@@ -86,6 +116,12 @@ public class InputProcessor extends InputAdapter {
 	boolean isShiftPressed() {
 		return Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT) ||
 				Gdx.input.isKeyPressed(Input.Keys.SHIFT_RIGHT);
+	}
+	
+	
+	
+	boolean isSpacePressed() {
+		return Gdx.input.isKeyPressed(Input.Keys.SPACE);
 	}
 	
 	
@@ -100,9 +136,19 @@ public class InputProcessor extends InputAdapter {
 		}
 	}
 	
+	void filterForResourcePoints(Collection<Entity> entities) {
+		Iterator<Entity> iter 	= entities.iterator();
+		while (iter.hasNext()) {
+			Entity e = iter.next();
+			if (e.getResourcePointModule() == null) {
+				iter.remove();
+			}
+		}
+	}
 	
 	
-	Set<Entity> entitiesBelow(Vector2 pos) {
+	
+	List<Entity> entitiesBelow(Vector2 pos) {
 		float size 		= 0.6f;
 		final Vector2 a = pos.cpy().add(-size, -size);
 		final Vector2 b = pos.cpy().add( size,  size);
@@ -117,26 +163,22 @@ public class InputProcessor extends InputAdapter {
 			}
 		});
 		
-		RayCastForEntitiesBelow raycast = new RayCastForEntitiesBelow();
-		game.physicsWorld.rayCast(raycast, a, b);
-		game.physicsWorld.rayCast(raycast, c, d);
-		return raycast.entities;
-	}
-	
-	class RayCastForEntitiesBelow implements RayCastCallback {
-		
-		Set<Entity> entities = new HashSet<Entity>(8);
-		
-		@Override
-		public float reportRayFixture(Fixture fixture, Vector2 point,
-				Vector2 normal, float fraction) {
-			Object data = fixture.getUserData();
-			if (data != null) {
-				Entity e = (Entity)data;
-				entities.add(e);
+		final Set<Entity> entities = new HashSet<Entity>(8);
+		QueryCallback queryCallback = new QueryCallback() {
+			@Override
+			public boolean reportFixture(Fixture fxtr) {
+				Object data = fxtr.getUserData();
+				if (data != null) {
+					Entity e = (Entity)data;
+					entities.add(e);
+				}
+				return true;
 			}
-			return 1;
-		}
+		};
+		float s = 0.1f;
+		game.physicsWorld.QueryAABB(queryCallback, pos.x - s, pos.y - s, pos.x + s, pos.y + s);
+		
+		return new ArrayList<Entity>(entities);
 	}
 
 	
@@ -164,14 +206,10 @@ public class InputProcessor extends InputAdapter {
 	public boolean keyDown(int keycode) {
 		switch (keycode) {
 		case Input.Keys.ESCAPE:
-			if (commandMode == CommandMode.None) {
-				Gdx.app.exit();
-			} else {
-				setCommandMode(CommandMode.None);
-			}
+			Gdx.app.exit();
 			return true;
 		case Input.Keys.T:
-			setCommandMode(CommandMode.BuildTower);
+			if (!selection.isEmpty()) setCommandMode(CommandMode.BuildTower);
 			return true;
 		default:
 			return false;

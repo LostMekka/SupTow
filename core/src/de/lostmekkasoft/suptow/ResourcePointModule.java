@@ -10,17 +10,23 @@ package de.lostmekkasoft.suptow;
  *
  * @author fine
  */
-public class ResourcePointModule {
+public class ResourcePointModule extends EntityModule {
 	
 	public final float maxResource;
 	
 	private float resource;
 
-	public ResourcePointModule(float maxResource, float resource) {
+	public ResourcePointModule(float resource, float maxResource) {
 		this.maxResource = maxResource;
 		this.resource = resource;
 	}
+
+	@Override
+	public void onInit() {
+		getEntity().createFixture().setSensor(true);
+	}
 	
+	@Override
 	public boolean isAlive() {
 		return resource > 0;
 	}

@@ -57,6 +57,10 @@ public class Entity {
 		return fixture;
 	}
 	
+	public Vector2 getPosition() {
+		return physicsBody.getPosition();
+	}
+	
 	public MovementModule getMovementModule() {
 		return movementModule;
 	}
@@ -72,6 +76,7 @@ public class Entity {
 
 	public void setHealthModule(HealthModule healthModule) {
 		this.healthModule = healthModule;
+		healthModule.init(this);
 	}
 
 	public WeaponsModule getWeaponsModule() {
@@ -98,6 +103,7 @@ public class Entity {
 
 	public void setFabberModule(FabberModule fabberModule) {
 		this.fabberModule = fabberModule;
+		fabberModule.init(this);
 	}
 
 	public ResourcePointModule getResourcePointModule() {
@@ -106,12 +112,16 @@ public class Entity {
 
 	public void setResourcePointModule(ResourcePointModule resourcePointModule) {
 		this.resourcePointModule = resourcePointModule;
+		resourcePointModule.init(this);
 	}
 	
 	public void update(float deltaTime) {
-		if (movementModule != null) movementModule.update(this, deltaTime);
-		if (weaponsModule != null) weaponsModule.update(deltaTime);
+		if (movementModule != null) movementModule.update(deltaTime);
 		if (shotModule != null) shotModule.update(deltaTime);
+		if (healthModule != null) healthModule.update(deltaTime);
+		if (weaponsModule != null) weaponsModule.update(deltaTime);
+		if (resourcePointModule != null) resourcePointModule.update(deltaTime);
+		if (fabberModule != null) fabberModule.update(deltaTime);
 	}
 	
 	public boolean needsToBeRemoved() {

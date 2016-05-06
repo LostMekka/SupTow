@@ -10,7 +10,7 @@ package de.lostmekkasoft.suptow;
  *
  * @author fine
  */
-public class HealthModule {
+public class HealthModule extends EntityModule {
 	
 	public final float maxHealth;
 	
@@ -29,6 +29,7 @@ public class HealthModule {
 		return health / maxHealth;
 	}
 	
+	@Override
 	public boolean isAlive() {
 		return health > 0;
 	}

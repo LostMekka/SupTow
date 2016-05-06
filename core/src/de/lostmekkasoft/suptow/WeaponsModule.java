@@ -12,7 +12,7 @@ import java.util.Collection;
  *
  * @author fine
  */
-public class WeaponsModule {
+public class WeaponsModule extends EntityModule {
 	
 	public final float reloadTime;
 	public final float shotVelocity;
@@ -21,7 +21,6 @@ public class WeaponsModule {
 	public final float range;
 	
 	private float timer = 0;
-	private Entity self = null;
 
 	public WeaponsModule(float reloadTime, float shotVelocity, 
 			float shotLifeTime, float damage, float range) {
@@ -33,24 +32,21 @@ public class WeaponsModule {
 	}
 
 	public boolean canTarget(Entity target) {
-		return target.team != self.team
-				&& self.getDistanceTo(target) <= range
+		return target.team != getEntity().team
+				&& getEntity().getDistanceTo(target) <= range
 				&& timer <= 0;
 	}
 	
-	public void init(Entity e) {
-		self = e;
-	}
-	
+	@Override
 	public void update(float deltaTime) {
 		timer = Math.max(0f, timer - deltaTime);
 		if (timer == 0f) {
-			Collection<Entity> targets = SupTowGame.getInstance().getTargetableEntities();
+			Collection<Entity> targets = getGame().getTargetableEntities();
 			Entity nearest = null;
 			float distance = Float.MAX_VALUE;
 			for (Entity e : targets) {
-				float d = self.getDistanceTo(e);
-				if (d < distance && e.team != self.team) {
+				float d = getEntity().getDistanceTo(e);
+				if (d < distance && e.team != getEntity().team) {
 					distance = d;
 					nearest = e;
 				}
@@ -62,7 +58,7 @@ public class WeaponsModule {
 	}
 	
 	private void shootAt(Entity target) {
-		SupTowGame.getInstance().createShot(self, target.physicsBody.getPosition());
+		getGame().createShot(getEntity(), target.physicsBody.getPosition());
 		timer += reloadTime;
 	}
 	

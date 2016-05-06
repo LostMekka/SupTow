@@ -37,6 +37,7 @@ public class SupTowGame extends ApplicationAdapter {
 		return instance;
 	}
 
+	InputProcessor inputProcessor;
 	BitmapFont font;
 	SpriteBatch batch, hudBatch;
 	Texture img;
@@ -57,6 +58,7 @@ public class SupTowGame extends ApplicationAdapter {
 	public void resize(int width, int height) {
 		viewport.update(width, height);
 		hudViewport.update(width, height);
+		hudCamera.translate(width / 2f, height / 2f);
 	}
 	
 	static class Textures {
@@ -100,13 +102,12 @@ public class SupTowGame extends ApplicationAdapter {
 		viewport = new ScreenViewport(camera);
 		viewport.setUnitsPerPixel(1.0f / 8.0f);
 		hudCamera = new OrthographicCamera();
-		hudViewport = new ScreenViewport(camera);
+		hudViewport = new ScreenViewport(hudCamera);
 
 		shapeRenderer = new ShapeRenderer();
 		shapeRenderer.setAutoShapeType(true);
 		
 		font = new BitmapFont();
-		font.getData().setScale(2);
 		
 		fabbers = new EntityList();
 		towers = new EntityList();
@@ -125,7 +126,8 @@ public class SupTowGame extends ApplicationAdapter {
 		
 		createTower(new Vector2(4f, -1f));
 		
-		Gdx.input.setInputProcessor(new InputProcessor(this));
+		inputProcessor = new InputProcessor(this);
+		Gdx.input.setInputProcessor(inputProcessor);
 		
 		Timer.schedule(new DebugPrint(), 1, 1);
 	}
@@ -147,7 +149,7 @@ public class SupTowGame extends ApplicationAdapter {
 		for (Entity e : towers) updateEntity(e, deltaTime);
 		for (Entity e : enemies) updateEntity(e, deltaTime);
 		for (Entity e : shots) updateEntity(e, deltaTime);
-		// resource points need no update
+		for (Entity e : resourcePoints) updateEntity(e, deltaTime);
 		fabbers.applyRemoval();
 		towers.applyRemoval();
 		enemies.applyRemoval();
@@ -177,9 +179,10 @@ public class SupTowGame extends ApplicationAdapter {
 		shapeRenderer.end();
 		// overlay
 		hudViewport.apply();
-		hudBatch.setProjectionMatrix(hudCamera.projection);
+		hudBatch.setProjectionMatrix(hudCamera.combined);
 		hudBatch.begin();
-		font.draw(hudBatch, "resources: " + resources, 1, 1);
+		font.draw(hudBatch, "resources: " + resources, 5, 20);
+		font.draw(hudBatch, "command mode: " + inputProcessor.commandMode.name(), 5, 40);
 		hudBatch.end();
 		
 		// set gameplay viewport for input, which is handled between render calls
@@ -210,9 +213,9 @@ public class SupTowGame extends ApplicationAdapter {
 	public Entity createFabber(Vector2 position) {
 		Entity e = Entity.create(physicsWorld, position, 1f, 0);
 		e.createFixture();
-		e.setMovementModule(new MovementModule(3.5f, 2f, 0.25f));
+		e.setMovementModule(new MovementModule(8.5f, 2f, 0.4f));
 		e.setHealthModule(new HealthModule(100f));
-		e.setFabberModule(new FabberModule());
+		e.setFabberModule(new FabberModule(4f, 10f));
 		return fabbers.add(e) ? e : null;
 	}
 	
@@ -227,7 +230,7 @@ public class SupTowGame extends ApplicationAdapter {
 	public Entity createEnemy(Vector2 position) {
 		Entity e = Entity.create(physicsWorld, position, 1.5f, 1);
 		e.createFixture();
-		e.setMovementModule(new MovementModule(3.5f, 1f, 1f));
+		e.setMovementModule(new MovementModule(5.5f, 1f, 1f));
 		e.setHealthModule(new HealthModule(200f));
 		e.setWeaponsModule(new WeaponsModule(0.2f, 8f, 3f, 20f, 16f));
 		return enemies.add(e) ? e : null;
@@ -297,8 +300,7 @@ public class SupTowGame extends ApplicationAdapter {
 		final Vector2 target = pos.cpy();
 		for (Entity e : entities) {
 			MovementModule movement = e.getMovementModule();
-			movement.setTarget(target.cpy(), 3.5f);
-			movement.setTargetReachedCallback(new TargetReachedCallback() {
+			movement.setTarget(target.cpy(), 3.5f, new TargetReachedCallback() {
 				@Override
 				public void run(Vector2 target) {
 					createTower(target);

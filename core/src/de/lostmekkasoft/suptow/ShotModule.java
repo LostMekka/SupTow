@@ -13,7 +13,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
  *
  * @author fine
  */
-public class ShotModule {
+public class ShotModule extends EntityModule {
 
 	public final float damage;
 	public final int team;
@@ -33,18 +33,21 @@ public class ShotModule {
 		this.lifeTime = lifeTime;
 	}
 	
-	public void init(Entity e) {
-		e.createFixture().setSensor(true);
-		e.physicsBody.setBullet(true);
-		e.physicsBody.setType(BodyDef.BodyType.DynamicBody);
-		e.physicsBody.setLinearDamping(0);
-		e.physicsBody.setLinearVelocity(velocity);
+	@Override
+	public void onInit() {
+		getEntity().createFixture().setSensor(true);
+		getBody().setBullet(true);
+		getBody().setType(BodyDef.BodyType.DynamicBody);
+		getBody().setLinearDamping(0);
+		getBody().setLinearVelocity(velocity);
 	}
 	
+	@Override
 	public void update(float deltaTime) {
 		lifeTime = Math.max(0f, lifeTime - deltaTime);
 	}
 	
+	@Override
 	public boolean isAlive() {
 		return lifeTime > 0;
 	}
