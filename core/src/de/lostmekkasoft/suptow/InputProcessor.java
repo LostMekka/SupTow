@@ -23,7 +23,7 @@ public class InputProcessor extends InputAdapter {
 	
 	enum CommandMode {
 		BuildTower,
-		None, Move
+		None, Move, PlaceFabber, Place, PlaceTower
 	}
 	CommandMode commandMode = CommandMode.None;
 	
@@ -64,6 +64,14 @@ public class InputProcessor extends InputAdapter {
 			switch (commandMode) {
 			case BuildTower:
 				game.orderBuildTower(selection, position);
+				break;
+			case Place:
+				break;
+			case PlaceTower:
+				game.createTower(position);
+				break;
+			case PlaceFabber:
+				game.createFabber(position);
 				break;
 			case Move:
 				game.orderMove(selection, position);
@@ -210,10 +218,20 @@ public class InputProcessor extends InputAdapter {
 			Gdx.app.exit();
 			return true;
 		case Input.Keys.T:
-			if (!selection.isEmpty()) setCommandMode(CommandMode.BuildTower);
+			if (commandMode == CommandMode.Place) {
+				setCommandMode(CommandMode.PlaceTower);
+			} else {
+				if (!selection.isEmpty()) setCommandMode(CommandMode.BuildTower);
+			}
 			return true;
 		case Input.Keys.M:
 			if (!selection.isEmpty()) setCommandMode(CommandMode.Move);
+			return true;
+		case Input.Keys.F:
+			if (commandMode == CommandMode.Place) setCommandMode(CommandMode.PlaceFabber);
+			return true;
+		case Input.Keys.P:
+			setCommandMode(CommandMode.Place);
 			return true;
 		default:
 			return false;

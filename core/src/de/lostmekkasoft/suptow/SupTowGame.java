@@ -208,6 +208,7 @@ public class SupTowGame extends ApplicationAdapter {
 	}
 
 	public Entity createFabber(Vector2 position) {
+		System.out.println("createFabber");
 		Entity e = Entity.create(physicsWorld, position, 1f, 0);
 		e.createFixture();
 		e.setMovementModule(new MovementModule(8.5f, 2f, 0.4f));
@@ -217,6 +218,7 @@ public class SupTowGame extends ApplicationAdapter {
 	}
 	
 	public Entity createTower(Vector2 position) {
+		System.out.println("createTower");
 		Entity e = Entity.create(physicsWorld, position, 2f, 0);
 		e.createFixture();
 		e.setHealthModule(new HealthModule(500f));
@@ -225,6 +227,7 @@ public class SupTowGame extends ApplicationAdapter {
 	}
 	
 	public Entity createEnemy(Vector2 position) {
+		System.out.println("createEnemy");
 		Entity e = Entity.create(physicsWorld, position, 1.5f, 1);
 		e.createFixture();
 		e.setMovementModule(new MovementModule(5.5f, 1f, 1f));
