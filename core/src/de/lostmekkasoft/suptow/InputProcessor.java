@@ -3,7 +3,6 @@ package de.lostmekkasoft.suptow;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -14,7 +13,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.QueryCallback;
-import com.badlogic.gdx.physics.box2d.RayCastCallback;
 import java.util.ArrayList;
 
 public class InputProcessor extends InputAdapter {
@@ -25,7 +23,7 @@ public class InputProcessor extends InputAdapter {
 	
 	enum CommandMode {
 		BuildTower,
-		None
+		None, Move
 	}
 	CommandMode commandMode = CommandMode.None;
 	
@@ -65,10 +63,13 @@ public class InputProcessor extends InputAdapter {
 		} else {
 			switch (commandMode) {
 			case BuildTower:
-				game.orderBuildTower(selection, position); //TODO: use FabberModule instead
+				game.orderBuildTower(selection, position);
 				break;
+			case Move:
+				game.orderMove(selection, position);
 			case None:
-				selectEntities(clickedFabbers);
+				if (clickedFabbers.isEmpty()) game.orderMove(selection, position);
+				else selectEntities(clickedFabbers);
 				break;
 			}
 			if (!isShiftPressed()) commandMode = CommandMode.None;
@@ -210,6 +211,9 @@ public class InputProcessor extends InputAdapter {
 			return true;
 		case Input.Keys.T:
 			if (!selection.isEmpty()) setCommandMode(CommandMode.BuildTower);
+			return true;
+		case Input.Keys.M:
+			if (!selection.isEmpty()) setCommandMode(CommandMode.Move);
 			return true;
 		default:
 			return false;

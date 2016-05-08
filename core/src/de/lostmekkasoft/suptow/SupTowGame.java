@@ -21,10 +21,7 @@ import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.Timer.Task;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Random;
+
 
 public class SupTowGame extends ApplicationAdapter {
 
@@ -303,9 +300,20 @@ public class SupTowGame extends ApplicationAdapter {
 			movement.setTarget(target.cpy(), 3.5f, new TargetReachedCallback() {
 				@Override
 				public void run(Vector2 target) {
+					// TODO: use FabberModule instead, somehow
 					createTower(target);
 				}
 			});
+		}
+	}
+
+	public void orderMove(Collection<Entity> entities, Vector2 pos) {
+		System.out.println("orderMove");
+		final Vector2 target 	= pos.cpy();
+		final float radius		= entities.size() * 0.5f;
+		for (Entity e : entities) {
+			MovementModule movement = e.getMovementModule();
+			movement.setTarget(target.cpy(), radius);
 		}
 	}
 }
